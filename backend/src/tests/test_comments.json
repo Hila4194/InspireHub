@@ -1,0 +1,12 @@
+[
+    {
+        "comment": "Test Comment 1",
+        "author": "Hila",
+        "postId": "1234"
+    },
+    {
+        "comment": "Test Comment 2",
+        "author": "Hila 1",
+        "postId": "5678"
+    }
+]

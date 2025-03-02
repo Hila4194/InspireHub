@@ -1,27 +1,40 @@
-import express from "express";
+import express, {Express, NextFunction, Request, Response} from 'express';
 import dotenv from "dotenv";
 import mongoose from "mongoose";
+import bodyParser from "body-parser";
 import authRoute from './routes/auth_route';
+import postRoutes from "./routes/posts_route";
+import commentRoutes from "./routes/comments_route";
 
-dotenv.config();
 
 const app = express();
-const PORT = process.env.PORT || 3000;
+dotenv.config();
 
-// Connect to MongoDB
-mongoose
-  .connect(process.env.MONGO_URI as string)
-  .then(() => console.log("MongoDB connected successfully"))
-  .catch((err) => console.error("MongoDB connection error:", err));
-
-app.use(express.json());
+app.use(bodyParser.json());
+app.use(bodyParser.urlencoded({ extended: true }));
 
 app.use('/auth', authRoute);
+app.use("/posts", postRoutes);
+app.use("/comments", commentRoutes);
 
-app.get("/", (req, res) => {
-    res.send("InspireHub API is running...");
-});
+const initApp = async () => {
+    return new Promise<Express>(async (resolve, reject) => {
+        const db = mongoose.connection;
+        db.on("error", console.error.bind(console, "connection error:"));
+        db.once("open", function() {
+            console.log("Connected to the database");
+        });
+        if(!process.env.MONGO_URI){
+            reject("DB_CONNECTION is not defined");
+        } else {
+            mongoose.connect(process.env.MONGO_URI).then(() => {
+                resolve(app);
+            })
+            .catch((err) => {
+                reject(err);
+            });
+        }
+    });
+};
 
-app.listen(PORT, () => {
-    console.log(`Server running on http://localhost:${PORT}`);
-});
+export default initApp;
