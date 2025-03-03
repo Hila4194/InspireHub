@@ -16,8 +16,6 @@ router.put("/:id",authMiddleware, (res: Request, req: Response) => {
     commentController.updateItem(res,req);
 });
 
-router.delete("/:id", authMiddleware, (res: Request, req: Response) => {
-    commentController.deleteItem(res,req);
-});
+router.delete("/:id", authMiddleware, commentController.deleteItem.bind(commentController));
 
 export default router;

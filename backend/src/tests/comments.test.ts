@@ -4,7 +4,6 @@ import mongoose from "mongoose";
 import commentModel from "../models/comments_model";
 import {Express} from "express";
 import testComments from "./test_comments.json";
-import userModel from "../models/user_model";
 
 let app: Express;
 
@@ -22,15 +21,15 @@ const userInfo: UserInfo = {
 beforeAll(async ()=>{
     app = await initApp();
     await commentModel.deleteMany();
-    await userModel.deleteMany();
     await request(app).post("/auth/register").send(userInfo);
     const response = await request(app).post("/auth/login").send(userInfo);
     userInfo.token = response.body.token;
     userInfo._id = response.body._id;
+    expect(response.statusCode).toBe(200);
 });
 
-afterAll(async()=>{
-    await mongoose.connection.close();
+afterAll(()=>{
+    mongoose.connection.close();
 });
 
 let commentId = "";

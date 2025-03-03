@@ -16,8 +16,6 @@ router.put("/:id", authMiddleware, (res: Request, req: Response) => {
     postcontroller.updateItem(res,req);
 });
 
-router.delete("/:id", authMiddleware, (res: Request, req: Response) => {
-    postcontroller.deleteItem(res,req);
-});
+router.delete("/:id", authMiddleware, postcontroller.deleteItem.bind(postcontroller));
 
 export default router;

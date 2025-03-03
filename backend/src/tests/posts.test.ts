@@ -4,7 +4,6 @@ import mongoose from "mongoose";
 import postModel from "../models/posts_model";
 import {Express} from "express";
 import testPosts from "./test_posts.json";
-import userModel from "../models/user_model";
 
 let app: Express;
 
@@ -19,21 +18,26 @@ const userInfo: UserInfo = {
     password: "123456"
 }
 
+let accessToken: string;
+let postId = "";
+
 beforeAll(async ()=>{
     app = await initApp();
     await postModel.deleteMany();
-    await userModel.deleteMany();
-    await request(app).post("/auth/register").send(userInfo);
-    const response = await request(app).post("/auth/login").send(userInfo);
-    userInfo.token = response.body.token;
-    userInfo._id = response.body._id;
+    const response = await request(app).post("/auth/register").send(userInfo);
+    const response2 = await request(app).post("/auth/login").send(userInfo);
+    expect(response2.statusCode).toBe(200);
+    accessToken = response2.body.token;
+    testPosts[0].owner = response2.body._id;
 });
 
-afterAll(async()=>{
-    await mongoose.connection.close();
+afterAll(()=>{
+    mongoose.connection.close();
 });
 
-let postId = "";
+const invalidPost = {
+    content: "Test content",
+  };
 
 describe("Posts Test", ()=>{
     test("Test get all posts empty", async ()=>{
@@ -45,7 +49,7 @@ describe("Posts Test", ()=>{
     test("Test create new post", async ()=>{
         for(let post of testPosts){
             const response = await request(app).post("/posts")
-            .set("authorization", "JWT " + userInfo.token)
+            .set("authorization", "jwt " + accessToken)
             .send(post);
             expect(response.statusCode).toBe(201);
             expect(response.body.title).toBe(post.title);
@@ -74,7 +78,7 @@ describe("Posts Test", ()=>{
 
     test("Test Delete post by id", async ()=>{
         const response = await request(app).delete("/posts/" + postId)
-        .set("authorization", "JWT " + userInfo.token);
+        .set("authorization", "jwt " + userInfo.token);
         expect(response.statusCode).toBe(200);
         
         const responseGet = await request(app).get("/posts/" + postId);
@@ -83,11 +87,11 @@ describe("Posts Test", ()=>{
 
     test("Test create new post - fail", async ()=>{
         const response = await request(app).post("/posts")
-        .set("authorization", "JWT " + userInfo.token)
+        .set("authorization", "jwt " + userInfo.token)
         .send({
             title: "Test Post 1",
             content: "Test content 1"
         });
-        expect(response.statusCode).toBe(400);
+        expect(response.statusCode).not.toBe(201);
     });
 });

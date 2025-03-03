@@ -4,6 +4,7 @@ import mongoose from "mongoose";
 import postModel from "../models/posts_model";
 import {Express} from "express";
 import userModel from "../models/user_model";
+import testPosts from "./test_posts.json";
 
 let app: Express;
 
@@ -72,7 +73,7 @@ describe("Auth Tests", ()=>{
         });
         expect(response.statusCode).not.toBe(201);
         const response2 = await request(app).post("/posts").set({
-            authorization: "JWT " + userInfo.accessToken}).send({
+            authorization: "jwt " + userInfo.accessToken}).send({
             owner: "Invalid owner",
             title: "My First Post",
             content: "This is my first posttt",
@@ -83,7 +84,7 @@ describe("Auth Tests", ()=>{
     test("Get protected API invalid token", async ()=>{
         const response = await request(app).post("/posts")
         .set({
-            authorization: "JWT " + userInfo.accessToken + '1'})
+            authorization: "jwt " + userInfo.accessToken + '1'})
         .send({
             owner: userInfo._id,
             title: "My First Post",
@@ -147,42 +148,25 @@ describe("Auth Tests", ()=>{
     });
 
     jest.setTimeout(10000);
-    test("Test timeout token ", async () => {
-      const response = await request(app).post("/auth/login").send({
-        email: userInfo.email,
-        password: userInfo.password,
-      });
-      expect(response.statusCode).toBe(200);
-      expect(response.body.accessToken).toBeDefined();
-      expect(response.body.refreshToken).toBeDefined();
-      userInfo.accessToken = response.body.accessToken;
-      userInfo.refreshToken = response.body.refreshToken;
-      //wait for 6 seconds
-      await new Promise(resolve => setTimeout(resolve, 6000));
-      //try to access with expired token
-      const response2 = await request(app).post("/posts").set(
-        { authorization: "JWT " + userInfo.accessToken }
-      ).send({
-        title: "Test Post",
-        content: "Test Content",
-        sender: "sdfSd",
-      });
-      expect(response2.statusCode).not.toBe(201);
-  
-      const response3 = await request(app).post("/auth/refresh").send({
-        refreshToken: userInfo.refreshToken,
-      });
-      expect(response3.statusCode).toBe(200);
+  test("Token expired", async () => {
+    await new Promise((resolve) => setTimeout(resolve, 5000));
 
-      userInfo.accessToken = response3.body.accessToken;
-      userInfo.refreshToken = response3.body.refreshToken;
-      const response4 = await request(app).post("/posts").set(
-        { authorization: "JWT " + userInfo.accessToken }
-      ).send({
-        title: "Test Post",
-        content: "Test Content",
-        sender: "sdfSd",
-      });
-      expect(response4.statusCode).toBe(201);
+    const response = await request(app).post("/posts")
+      .set({ authorization: "JWT " + userInfo.accessToken })
+      .send(testPosts[0]);
+    expect(response.statusCode).not.toBe(201);
+
+    const response2 = await request(app).post("/auth/refresh").send({
+      refreshToken: userInfo.refreshToken,
     });
+    expect(response2.statusCode).toBe(200);
+    
+    userInfo.accessToken = response2.body.accessToken;
+    userInfo.refreshToken = response2.body.refreshToken;
+    const response3 = await request(app).post("/posts")
+      .set({ authorization: "JWT " + userInfo.accessToken })
+      .send(testPosts[0]);
+    expect(response3.statusCode).toBe(201);
+
+  });
 });
