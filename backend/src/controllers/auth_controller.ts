@@ -20,7 +20,7 @@ const register = async (req: Request, res: Response) => {
   } catch (err) {
     res.status(400).send(err);
   }
-}
+};
 
 const generateTokens = (user: IUser): { refreshToken: string, accessToken: string } | null => {
   if (process.env.TOKEN_SECRET === undefined) {
@@ -43,7 +43,6 @@ const generateTokens = (user: IUser): { refreshToken: string, accessToken: strin
     { expiresIn: Number(process.env.REFRESH_TOKEN_EXPIRATION) || "7d" });
   return { refreshToken: refreshToken, accessToken: accessToken };
 };
-
 
 const login = async (req: Request, res: Response) => {
   const email = req.body.email;
@@ -68,7 +67,7 @@ const login = async (req: Request, res: Response) => {
       user.refreshTokens = [];
     }
     user.refreshTokens.push(tokens.refreshToken);
-    user.save();
+    await user.save();
     res.status(200).send(
       {
         ...tokens,
@@ -114,7 +113,7 @@ const validateRefreshToken = (refreshToken: string | undefined) => {
       }
     });
   });
-}
+};
 
 const logout = async (req: Request, res: Response) => {
   try {
@@ -157,26 +156,39 @@ const refresh = async (req: Request, res: Response) => {
 type Payload = {
   _id: string;
 }
-export const authMiddleware = (req: Request, res: Response, next: NextFunction) => {
+export const authMiddleware = (req: Request, res: Response, next: NextFunction): void => {
   const tokenHeader = req.headers["authorization"];
   const token = tokenHeader && tokenHeader.split(" ")[1];
+
   if (!token) {
-    res.status(400).send("Access denied");
+    res.status(401).send("Access denied: No token provided");
     return;
   }
-  if (process.env.TOKEN_SECRET === undefined) {
-    res.status(400).send("server error");
+
+  if (!process.env.TOKEN_SECRET) {
+    res.status(500).send("Server error: Token secret is missing");
     return;
   }
+
   jwt.verify(token, process.env.TOKEN_SECRET, (err, payload) => {
     if (err) {
-      res.status(400).send("Access denied");
-    } else {
-      const userId = (payload as Payload)._id;
-      req.params.userId = userId;
-      next();
+      if (err.name === "TokenExpiredError") {
+        res.status(401).send("Token expired");
+      } else {
+        res.status(403).send("Access denied: Invalid token");
+      }
+      return;
     }
+
+    // Ensure TypeScript recognizes the payload type
+    if (typeof payload !== "object" || payload === null || !("_id" in payload)) {
+      res.status(403).send("Access denied: Invalid token structure");
+      return;
+    }
+
+    req.params.userId = (payload as { _id: string })._id;
+    next();
   });
-}
+};
 
 export default {register, login, refresh, logout}

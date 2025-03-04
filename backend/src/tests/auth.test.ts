@@ -14,9 +14,8 @@ beforeAll(async ()=>{
     await postModel.deleteMany();
 });
 
-afterAll((done)=>{
-    mongoose.connection.close();
-    done();
+afterAll(async () => {
+    await mongoose.connection.close();
 });
 
 type UserInfo = {
