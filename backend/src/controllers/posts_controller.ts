@@ -1,21 +1,47 @@
-import postModel, { IPost } from "../models/posts_model";
-import { Request, Response } from "express";
-import BaseController from "./base_controller";
+import { Request, Response } from 'express';
+import postModel, { IPost } from '../models/posts_model';
+import BaseController from './base_controller';
 
-class PostController extends BaseController<IPost> {
+class PostsController extends BaseController<IPost> {
     constructor() {
         super(postModel);
     }
 
-    async create(req: Request, res: Response) {
-        const userId = req.params.userId;
+    async createPost (req: Request, res: Response) {
+        const senderId = req.params.userId;
         const post = {
-            ...req.body,
-            owner: userId,
+            title: req.body.title,
+            content: req.body.content,
+            sender: senderId
         }
         req.body = post;
-        super.createItem(req, res);
+        super.create(req, res);
     };
-}
 
-export default new PostController();
+    async getPosts (req: Request, res: Response) {
+        super.getAll(req, res, "");
+
+    };
+
+    async getPostById (req: Request, res: Response): Promise<void> {
+        super.getById(req, res);
+    };
+
+    async getPostsBySender (req: Request, res: Response) {
+        super.getAll(req, res, 'sender');
+    }
+
+    async updatePost (req: Request, res: Response): Promise<void> {
+        const body = req.body;
+        const post = {
+            title: body.title,
+            content: body.content,
+            sender: body.sender
+        };
+        req.body = post;
+        super.update(req, res);
+    };
+};
+
+
+export default new PostsController();

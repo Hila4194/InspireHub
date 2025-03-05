@@ -1,14 +1,15 @@
-import dotenv from "dotenv";
-import initApp from "./server";
-dotenv.config();
+import initApp from './server';
 
-const port = process.env.PORT || 3000;
-
-initApp().then((app) => {
-    app.listen(port, ()=>{
-        console.log(`Server is running on port http://localhost:${port}`);
+const startServer = async () => {
+  try {
+    const app = await initApp();
+    const PORT = process.env.PORT || 3000;
+    app.listen(PORT, () => {
+      console.log(`Server running on port ${PORT}`);
     });
-}).catch((error) => {
-    console.error("Server startup failed:", error);
-    process.exit(1);
-});
+  } catch (error) {
+    console.error('Failed to start the server:', error);
+  }
+};
+
+startServer();

@@ -1,12 +1,10 @@
 [
     {
-        "comment": "Test Comment 1",
-        "author": "Hila",
-        "postId": "1234"
+        "content": "This is a comment",
+        "sender": "User 1"
     },
     {
-        "comment": "Test Comment 2",
-        "author": "Hila 1",
-        "postId": "5678"
+        "content": "This is another comment",
+        "sender": "User 2"
     }
 ]

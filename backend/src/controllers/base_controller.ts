@@ -1,75 +1,88 @@
-import { Request, Response } from "express";
+import { Request, Response } from 'express';
 import { Model } from "mongoose";
 
-class Basecontroller <T> {
+class BaseController<T> {
     model: Model<T>;
-    constructor(model: any) {
+    constructor(model: Model<T>) {
+        if (!model) throw new Error("Model is undefined! Check the import.");
         this.model = model;
     }
-    
-    async getAll (req: Request, res: Response)
-    {
-        const ownerFilter = req.query.owner;
-        try{
-            if(ownerFilter){
-                const data = await this.model.find({ownerFilter});
-                res.status(200).send(data);
-            }else {
-                const data= await this.model.find();
-                res.status(200).send(data);
-            }
-        }catch(error){
-            res.status(400).send(error);
+
+    async create(req: Request, res: Response) {
+        const body = req.body;
+        console.log(body);
+        try {
+            console.log("Creating item with data:", body);
+            const item = await this.model.create(body);
+            res.status(201).send(item);
+        } catch (err) {
+            console.error("Database error:", err); 
+            res.status(500).json({ error: (err as Error).message });
         }
     };
 
-    async getById (req: Request, res: Response)
-    {
-        const postId = req.params.id;
-        try{
-            const data = await this.model.findById(postId);
-            if(data === null) {
-                return res.status(404).send("Item not found");
+    async getAll(req: Request, res: Response, filterKey: string) {
+        console.log(req.params);
+        const filterValue = req.params[filterKey]; // Get the filter value dynamically
+        console.log(`Filter [${filterKey}]:`, filterValue);
+    
+        try {
+            if (filterValue) {
+                // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                const item = await this.model.find({ [filterKey]: filterValue } as any); // Get items by filter
+                res.send(item);
             } else {
-                res.status(200).send(data);
+                const items = await this.model.find(); // Get all items
+                res.send(items);
             }
-        }catch(error){
-            res.status(400).send(error);
+        } catch (err) {
+            res.status(500).json({ error: (err as Error).message });
         }
     }
-    
-    async createItem (req: Request, res: Response)
-    {
-        try{
-            const data = await this.model.create(req.body);
-            res.status(201).send(data);
-        }catch(error){
-            res.status(400).send(error);
+
+    async getById (req: Request, res: Response): Promise<void> {
+        const id = req.params.id;
+        try {
+            const item = await this.model.findById(id);
+            if (item != null) {
+                res.send(item);
+            } else {
+                res.status(404).json({ message: 'not found' });
+            }
+        } catch (err) {
+            res.status(500).json({ error: (err as Error).message });
         }
     };
     
-    async updateItem (req: Request, res: Response)
-    {
-        const updatedData = req.body; 
+    async update (req: Request, res: Response): Promise<void> {
+        const body = req.body;
         try {
-            const data = await this.model.findByIdAndUpdate(req.params.id, updatedData, { new: true, runValidators: true });
-            if (!data) {
-                return res.status(404).send({ message: "Item not found" });
+            const item = await this.model.findById(req.params.id);
+            if (!item) {
+                res.status(404).json({ message: 'not found' });
+                return;
             }
-            res.status(200).send(data);
-        } catch (error) {
-            res.status(400).send({ message: "Error updating item", error });
+            item.set(body);
+            await item.save();
+            res.json(item);
+        } catch (err) {
+            res.status(500).json({ error: (err as Error).message });
         }
     };
-    
-    async deleteItem (req: Request, res: Response)
-    {
+
+    async delete (req: Request, res: Response): Promise<void> {
         try {
-            await this.model.findByIdAndDelete(req.params.id);
-            res.status(200).send(200);
-        } catch (error) {
-            res.status(400).send(error);
+            const item = await this.model.findById(req.params.id);
+            if (!item) {
+                res.status(404).json({ message: 'not found' });
+                return;
+            }
+            await item.deleteOne();
+            res.json({ message: 'deleted' });
+        } catch (err) {
+            res.status(500).json({ error: (err as Error).message });
         }
-    }
-};
-export default Basecontroller;
+    };
+}
+
+export default BaseController;

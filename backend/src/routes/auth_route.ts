@@ -1,91 +1,93 @@
-import express from "express";
-import authcontroller from "../controllers/auth_controller";
-
+import express from 'express';
 const router = express.Router();
+import authController from '../controllers/auth_controller';
 
 /**
  * @swagger
  * tags:
  *   - name: Auth
  *     description: Authentication API
+ * 
+ * components:
+ *   securitySchemes:
+ *     bearerAuth:
+ *       type: http
+ *       scheme: bearer
+ *       bearerFormat: JWT
+ * 
+ *   schemas:
+ *     User:
+ *       type: object
+ *       required:
+ *         - email
+ *         - password
+ *       properties:
+ *         email:
+ *           type: string
+ *           description: The user email
+ *         password:
+ *           type: string
+ *           description: The user password
+ *       example:
+ *         email: "bob@gmail.com"
+ *         password: "123456"
  */
 
 /**
  * @swagger
- * /auth/register:
+ * /api/auth/register:
  *   post:
- *     summary: Register a new user
- *     tags: [Auth]
- *     description: Creates a new user account.
+ *     summary: Registers a new user
+ *     tags: 
+ *       - Auth
  *     requestBody:
  *       required: true
  *       content:
  *         application/json:
  *           schema:
- *             type: object
- *             properties:
- *               email:
- *                 type: string
- *                 example: "user@example.com"
- *               password:
- *                 type: string
- *                 example: "123456"
+ *             $ref: '#/components/schemas/User'
  *     responses:
  *       200:
- *         description: Successfully registered
+ *         description: The new user registered successfully
  *       400:
- *         description: Registration failed
+ *         description: Invalid input data
+ *       500:
+ *         description: Internal server error
  */
-router.post("/register", authcontroller.register);
+router.post('/register', authController.register);
 
 /**
  * @swagger
- * /auth/login:
+ * /api/auth/login:
  *   post:
- *     summary: Login a user
- *     tags: [Auth]
- *     description: Authenticates a user and returns access & refresh tokens.
+ *     summary: Logs in a user
+ *     tags: 
+ *       - Auth
  *     requestBody:
  *       required: true
  *       content:
  *         application/json:
  *           schema:
- *             type: object
- *             properties:
- *               email:
- *                 type: string
- *                 example: "user@example.com"
- *               password:
- *                 type: string
- *                 example: "123456"
+ *             $ref: '#/components/schemas/User'
  *     responses:
  *       200:
- *         description: Successfully authenticated
+ *         description: The user logged in successfully
  *       400:
- *         description: Incorrect email or password
+ *         description: Invalid credentials
+ *       401:
+ *         description: Unauthorized access
+ *       500:
+ *         description: Internal server error
  */
-router.post("/login", authcontroller.login);
+router.post('/login', authController.login);
 
 /**
  * @swagger
- * /auth/logout:
+ * /api/auth/refresh:
  *   post:
- *     summary: Logout a user
- *     tags: [Auth]
- *     description: Invalidates the user's session
- *     responses:
- *       200:
- *         description: Successfully logged out
- */
-router.post("/logout", authcontroller.logout);
-
-/**
- * @swagger
- * /auth/refresh:
- *   post:
- *     summary: Refresh the authentication token
- *     tags: [Auth]
- *     description: Generates a new access token using a refresh token.
+ *     summary: Generates a new refresh token
+ *     tags: 
+ *       - Auth
  *     requestBody:
  *       required: true
  *       content:
@@ -95,13 +97,50 @@ router.post("/logout", authcontroller.logout);
  *             properties:
  *               refreshToken:
  *                 type: string
- *                 example: "your_refresh_token"
+ *                 description: The refresh token
+ *     security:
+ *       - bearerAuth: []
  *     responses:
  *       200:
- *         description: New access token generated
+ *         description: Refresh token generated successfully
  *       400:
  *         description: Invalid refresh token
+ *       401:
+ *         description: Unauthorized access
+ *       500:
+ *         description: Internal server error
  */
-router.post("/refresh", authcontroller.refresh);
+router.post('/refresh', authController.refresh);
+
+/**
+ * @swagger
+ * /api/auth/logout:
+ *   post:
+ *     summary: Logs out a user
+ *     tags: 
+ *       - Auth
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               refreshToken:
+ *                 type: string
+ *                 description: The refresh token
+ *     responses:
+ *       200:
+ *         description: The user logged out successfully
+ *       400:
+ *         description: Invalid refresh token
+ *       401:
+ *         description: Unauthorized access
+ *       500:
+ *         description: Internal server error
+ */
+router.post('/logout', authController.logout);
 
 export default router;

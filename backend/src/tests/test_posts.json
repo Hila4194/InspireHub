@@ -1,12 +1,17 @@
 [
     {
-        "title": "Test Post 1",
-        "content": "Test content 1",
-        "owner": "Hila"
+        "title": "1",
+        "content": "Post 1",
+        "sender": "User 1"
     },
     {
-        "title": "Test Post 2",
-        "content": "Test content 2",
-        "owner": "Hila"
+        "title": "2",
+        "content": "Post 2",
+        "sender": "User 2"
+    },
+    {
+        "title": "3",
+        "content": "Post 3",
+        "sender": "User 1"
     }
 ]

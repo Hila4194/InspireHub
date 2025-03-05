@@ -1,97 +1,234 @@
 import request from "supertest";
-import initApp from "../server";
+import appPromise from "../server";
 import mongoose from "mongoose";
 import postModel from "../models/posts_model";
-import {Express} from "express";
 import testPosts from "./test_posts.json";
+import userModel, { IUser } from "../models/user_model";
+import { Express } from "express";
+
 
 let app: Express;
+let postId: string;
 
-type UserInfo = {
-    email: string,
-    password: string,
-    token?: string,
-    _id?: string
-}
-const userInfo: UserInfo = {
-    email: "hila4194@gmail.com",
-    password: "123456"
+type User = IUser & { accessToken?: string, refreshToken?: string };
+
+const testUser: User = {
+  email: "test@user.com",
+  password: "testpassword",
 }
 
-let accessToken: string;
-let postId = "";
-
-beforeAll(async ()=>{
-    app = await initApp();
+beforeAll( async () => {
+    console.log('This runs before all tests');
+    app = await appPromise();
     await postModel.deleteMany();
-    const response = await request(app).post("/auth/register").send(userInfo);
-    const response2 = await request(app).post("/auth/login").send(userInfo);
-    expect(response2.statusCode).toBe(200);
-    accessToken = response2.body.token;
-    testPosts[0].owner = response2.body._id;
+
+    await userModel.deleteMany();
+    await request(app).post("/api/auth/register").send(testUser);
+    const res = await request(app).post("/api/auth/login").send(testUser);
+    testUser.accessToken = res.body.accessToken;
+    testUser.refreshToken = res.body.refreshToken;
+    testUser._id = res.body._id;
+    console.log("Test user created with token:", testUser);
+    expect(testUser.accessToken).toBeDefined();
+    expect(testUser.refreshToken).toBeDefined();
 });
 
-afterAll(()=>{
-    mongoose.connection.close();
+afterAll(async () => {
+    console.log('This runs after all tests');
+    await mongoose.disconnect(); // Close MongoDB connection after tests
 });
 
-const invalidPost = {
-    content: "Test content",
-  };
-
-describe("Posts Test", ()=>{
-    test("Test get all posts empty", async ()=>{
-        const response = await request(app).get("/posts");
-        expect(response.statusCode).toBe(200);
-        expect(response.body.length).toBe(0);
-    });
-
-    test("Test create new post", async ()=>{
-        for(let post of testPosts){
-            const response = await request(app).post("/posts")
-            .set("authorization", "jwt " + accessToken)
-            .send(post);
-            expect(response.statusCode).toBe(201);
-            expect(response.body.title).toBe(post.title);
-            expect(response.body.content).toBe(post.content);
-            postId = response.body._id;
-        }
-    });
-
-    test("Test get all posts full", async ()=>{
-        const response = await request(app).get("/posts");
-        expect(response.statusCode).toBe(200);
-        expect(response.body.length).toBe(testPosts.length);
-    });
-
-    test("Test get post by id", async ()=>{
-        const response = await request(app).get("/posts/" + postId);
-        expect(response.statusCode).toBe(200);
-        expect(response.body._id).toBe(postId);
-    });
-
-    test("Test filter post by owner", async ()=>{
-        const response = await request(app).get("/posts?owner=" + testPosts[0].owner);
-        expect(response.statusCode).toBe(200);
-        expect(response.body.length).toBe(0);
-    });
-
-    test("Test Delete post by id", async ()=>{
-        const response = await request(app).delete("/posts/" + postId)
-        .set("authorization", "jwt " + userInfo.token);
-        expect(response.statusCode).toBe(200);
+describe("Create Post", () => {
+    test("should create a new post", async () => {
+        const res = await request(app)
+            .post("/api/posts")
+            .set({
+                authorization: "JWT " +  testUser.accessToken,
+            })
+            .send(testPosts[0]);
+        console.log("Response body:", res.body);
+        expect(res.statusCode).toEqual(201);
+        expect(res.body).toHaveProperty("_id");
+        expect(res.body.title).toEqual(testPosts[0].title);
+        expect(res.body.content).toEqual(testPosts[0].content);
+        expect(res.body.sender).toEqual(testUser._id);
         
-        const responseGet = await request(app).get("/posts/" + postId);
-        expect(responseGet.statusCode).toBe(404);
+        postId = res.body._id;
     });
 
-    test("Test create new post - fail", async ()=>{
-        const response = await request(app).post("/posts")
-        .set("authorization", "jwt " + userInfo.token)
-        .send({
-            title: "Test Post 1",
-            content: "Test content 1"
+    test("should return 500 if there is a server error", async () => {
+        jest.spyOn(postModel, 'create').mockImplementationOnce(() => {
+            throw new Error("Database save error");
         });
-        expect(response.statusCode).not.toBe(201);
+
+        const res = await request(app)
+            .post("/api/posts")
+            .set({
+                authorization: "JWT " +  testUser.accessToken,
+            })
+            .send(testPosts[0]);
+        expect(res.statusCode).toEqual(500);
+        expect(res.body).toHaveProperty("error", "Database save error");
+
+        // Restore the original implementation
+        jest.restoreAllMocks();
+    });
+});
+
+describe("Get Posts", () => {
+    test("should get all posts", async () => {
+        const res = await request(app).get("/api/posts");
+        expect(res.statusCode).toEqual(200);
+        expect(res.body.length).toEqual(1);
+        expect(res.body[0]).toHaveProperty("_id");
+        expect(res.body[0].title).toEqual(testPosts[0].title);
+        expect(res.body[0].content).toEqual(testPosts[0].content);
+        expect(res.body[0].sender).toEqual(testUser._id);
+    });
+
+    test("should return 500 if there is a server error", async () => {
+        // Mock Post.find to throw an error
+        jest.spyOn(postModel, 'find').mockImplementationOnce(() => {
+            throw new Error("Database error");
+        });
+
+        const res = await request(app).get("/api/posts");
+        expect(res.statusCode).toEqual(500);
+        expect(res.body).toHaveProperty("error", "Database error");
+
+        // Restore the original implementation
+        jest.restoreAllMocks();
+    });
+});
+
+describe("Get Post by ID", () => {
+    test("should get a post by id", async () => {
+        
+        const res = await request(app).get(`/api/posts/${postId}`);
+        expect(res.statusCode).toEqual(200);
+        expect(res.body).toHaveProperty("_id");
+        expect(res.body.title).toEqual(testPosts[0].title);
+        expect(res.body.content).toEqual(testPosts[0].content);
+        expect(res.body.sender).toEqual(testUser._id);
+
+    });
+
+    // Test for 404 error when the post is not found
+    test("should return 404 if the post does not exist", async () => {
+        const fakeId = "000000000000000000000000"; // A non-existent ID
+        const res = await request(app).get(`/api/posts/${fakeId}`);
+        expect(res.statusCode).toEqual(404);
+        expect(res.body).toHaveProperty("message", "not found");
+    });
+
+    // Test for 500 error (server error)
+    test("should return 500 if there is a server error", async () => {
+        // Mock Post.findById to throw an error
+        jest.spyOn(postModel, 'findById').mockImplementationOnce(() => {
+            throw new Error("Database error");
+        });
+
+        const res = await request(app).get(`/api/posts/${postId}`);
+        expect(res.statusCode).toEqual(500);
+        expect(res.body).toHaveProperty("error", "Database error");
+
+        // Restore the original implementation
+        jest.restoreAllMocks();
+    });
+});
+
+describe("Get Posts by Sender", () => { 
+    test("should get posts by sender", async () => {
+
+        const res = await request(app).get(`/api/posts/sender/${testUser._id}`);
+        expect(res.statusCode).toEqual(200);
+        expect(res.body.length).toEqual(1);
+        expect(res.body[0]).toHaveProperty("_id");
+        expect(res.body[0].title).toEqual(testPosts[0].title);
+        expect(res.body[0].content).toEqual(testPosts[0].content);
+        expect(res.body[0].sender).toEqual(testUser._id);
+    });
+
+    // Test for 500 error (server error)
+    test("should return 500 if there is a server error", async () => {
+        // Mock Post.find to throw an error
+        jest.spyOn(postModel, 'find').mockImplementationOnce(() => {
+            throw new Error("Database error");
+        });
+
+        const res = await request(app).get(`/api/posts/sender/${testPosts[0].sender}`);
+        expect(res.statusCode).toEqual(500);
+        expect(res.body).toHaveProperty("error", "Database error");
+
+        // Restore the original implementation
+        jest.restoreAllMocks();
+    });
+});
+
+const updatedPost = {
+    title: "Updated Post",
+    content: "This is an updated post",
+    sender: "Updated Sender",
+};
+
+describe("Update Post", () => {
+    test("should update a post", async () => {
+
+        const res = await request(app)
+            .put(`/api/posts/${postId}`)
+            .set({
+                authorization: "JWT " +  testUser.accessToken,
+            })
+            .send({
+                title: updatedPost.title,
+                content: updatedPost.content,
+                sender: testUser._id,
+            });
+        expect(res.statusCode).toEqual(200);
+        expect(res.body).toHaveProperty("_id");
+        expect(res.body.title).toEqual(updatedPost.title);
+        expect(res.body.content).toEqual(updatedPost.content);
+        expect(res.body.sender).toEqual(testUser._id);
+    });
+
+    // Test for 404 error when the post is not found
+    test("should return 404 if the post does not exist", async () => {
+        const fakeId = "000000000000000000000000"; // A non-existent ID
+        const res = await request(app)
+            .put(`/api/posts/${fakeId}`)
+            .set({
+                authorization: "JWT " +  testUser.accessToken,
+            })
+            .send({
+                title: updatedPost.title,
+                content: updatedPost.content,
+                sender: testUser._id,
+            });
+        expect(res.statusCode).toEqual(404);
+        expect(res.body).toHaveProperty("message", "not found");
+    });
+
+    // Test for 500 error (server error)
+    test("should return 500 if there is a server error", async () => {
+        // Mock Post.findById to throw an error
+        jest.spyOn(postModel, 'findById').mockImplementationOnce(() => {
+            throw new Error("Database error");
+        });
+
+        const res = await request(app)
+            .put(`/api/posts/${postId}`)
+            .set({
+                authorization: "JWT " +  testUser.accessToken,
+            })
+            .send({
+                title: updatedPost.title,
+                content: updatedPost.content,
+                sender: testUser._id,
+            });
+        expect(res.statusCode).toEqual(500);
+        expect(res.body).toHaveProperty("error", "Database error");
+
+        // Restore the original implementation
+        jest.restoreAllMocks();
     });
 });

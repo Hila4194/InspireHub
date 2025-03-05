@@ -1,19 +1,19 @@
 ###
 
 //Get all posts
-GET http://localhost:3000/posts
+GET http://localhost:4000/posts
 
 ###
 //Get post by a owner
-GET http://localhost:3000/posts?owner=Hila
+GET http://localhost:4000/posts?owner=Hila
 
 ###
 //Get post by post-id
-GET http://localhost:3000/posts/67c59ea71a4beb1b2e621792
+GET http://localhost:4000/posts/67c59ea71a4beb1b2e621792
 
 ###
 //Create a post
-POST http://localhost:3000/posts
+POST http://localhost:4000/posts
 Content-Type: application/json
 
 {
@@ -24,7 +24,7 @@ Content-Type: application/json
 
 ###
 //Update a post by post-id
-PUT http://localhost:3000/posts/67c59ea71a4beb1b2e621792
+PUT http://localhost:4000/posts/67c59ea71a4beb1b2e621792
 Content-Type: application/json
 
 {
@@ -35,11 +35,11 @@ Content-Type: application/json
 
 ### 
 //Delete a post by post-id
-DELETE http://localhost:3000/posts/67c59ea71a4beb1b2e621792
+DELETE http://localhost:4000/posts/67c59ea71a4beb1b2e621792
 
 ###
 //Register a new user
-POST http://localhost:3000/auth/register
+POST http://localhost:4000/auth/register
 Content-Type: application/json
 
 {
@@ -49,7 +49,7 @@ Content-Type: application/json
 
 ###
 //Login as exist user
-POST http://localhost:3000/auth/login
+POST http://localhost:4000/auth/login
 Content-Type: application/json
 
 {
@@ -59,7 +59,7 @@ Content-Type: application/json
 
 ###
 //Logout as exist user
-POST http://localhost:3000/auth/logout
+POST http://localhost:4000/auth/logout
 Content-Type: application/json
 
 {
