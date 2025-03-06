@@ -33,6 +33,7 @@ console.log("Swagger docs available at http://localhost:" + process.env.PORT + "
 import postRouter from './routes/posts_route';
 import commentRouter from './routes/comments_route';
 import authRouter from './routes/auth_route';
+import fileRouter from './routes/file_route';
 
 // Create a function to initialize the server
 const initApp = async (): Promise<Express> => {
@@ -47,12 +48,16 @@ const initApp = async (): Promise<Express> => {
     const app = express();
     app.use(express.json());
 
+    app.use("/public/", express.static("backend/public"));
+    app.use("/storage/", express.static("backend/storage"));
+    
     // Use routers
     app.use('/api/posts', postRouter);
     app.use('/api/comments', commentRouter);
     app.use('/api/auth', authRouter);
     app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(specs));
-
+    app.use('/file', fileRouter);
+  
     return app;
   } catch (error) {
     console.error('MongoDB connection error:', error);
