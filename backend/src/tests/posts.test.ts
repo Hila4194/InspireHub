@@ -38,7 +38,7 @@ afterAll(async () => {
     await mongoose.disconnect(); // Close MongoDB connection after tests
 });
 
-describe("Create Post", () => {
+describe("Posts tests", () => {
     test("should create a new post", async () => {
         const res = await request(app)
             .post("/api/posts")

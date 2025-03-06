@@ -6,7 +6,6 @@ import postModel from "../models/posts_model";
 import testPosts from "./test_posts.json";
 import { Express } from "express";
 
-
 let app: Express;
 
 beforeAll( async () => {
