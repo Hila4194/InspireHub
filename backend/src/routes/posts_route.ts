@@ -211,4 +211,30 @@ router.get('/sender/:sender', postController.getPostsBySender.bind(postControlle
  */
 router.put('/:id', authMiddleware, postController.updatePost.bind(postController));
 
+/**
+ * @swagger
+ * /api/posts/{id}:
+ *   delete:
+ *     summary: Deletes a post by ID **and all associated comments**
+ *     tags: 
+ *       - Posts
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: The ID of the post to delete
+ *     responses:
+ *       200:
+ *         description: Post and associated comments deleted successfully
+ *       404:
+ *         description: Post not found
+ *       500:
+ *         description: Internal server error
+ */
+router.delete('/:id', authMiddleware, postController.deletePost.bind(postController));
+
 export default router;

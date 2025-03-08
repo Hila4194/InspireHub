@@ -49,7 +49,7 @@ const initApp = async (): Promise<Express> => {
     app.use(express.json());
 
     app.use("/public/", express.static("backend/public"));
-    app.use("/storage/", express.static("backend/storage"));
+    app.use("/uploads/", express.static("backend/uploads"));
     
     // Use routers
     app.use('/api/posts', postRouter);

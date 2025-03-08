@@ -27,7 +27,8 @@ type User = IUser & {
 
 const user: User = {
     email: "user1@gmail.com",
-    password: "123456"
+    password: "123456",
+    username: "User1"
 };
 
 describe("Auth Tests", () => {
@@ -36,14 +37,14 @@ describe("Auth Tests", () => {
         .post("/api/auth/register")
         .send(user);
         console.log(response.body);
-        expect(response.statusCode).toBe(200);
+        expect(response.statusCode).toBe(201);
     });
 
     test ("Auth Registration with existing email", async () => {
         const response = await request(app)
         .post("/api/auth/register")
         .send(user);
-        expect(response.statusCode).toBe(500);
+        expect(response.statusCode).toBe(400);
     });
 
     test("Auth Login", async () => {
