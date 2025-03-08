@@ -29,7 +29,7 @@ const userSchema = new mongoose.Schema<IUser>({
   },
   profilePicture: {
     type: String,
-    default: "",
+    default: "/uploads/default-avatar.png",
   },
   refreshTokens: {
     type: [String],
