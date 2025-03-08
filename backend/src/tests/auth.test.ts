@@ -26,9 +26,9 @@ type User = IUser & {
 };
 
 const user: User = {
-    email: "user1@gmail.com",
-    password: "123456",
-    username: "User1"
+    username: "testuser123",
+    email: "test@user.com",
+    password: "testpassword",
 };
 
 describe("Auth Tests", () => {
@@ -50,17 +50,15 @@ describe("Auth Tests", () => {
     test("Auth Login", async () => {
         const response = await request(app)
         .post("/api/auth/login")
-        .send(user);
-
+        .send({ username: user.username, password: user.password });
+    
         expect(response.statusCode).toBe(200);
-
         user.accessToken = response.body.accessToken;
         user.refreshToken = response.body.refreshToken;
-
+    
         expect(user.accessToken).toBeDefined();
         expect(user.refreshToken).toBeDefined();
-
-    });
+    });    
 
     test("Access Token Are Not The Same", async () => {
         const response = await request(app)
@@ -127,7 +125,7 @@ describe("Auth Tests", () => {
     test("Refresh Token Multiple Use", async () => {
         // Login
         const response = await request(app).post("/api/auth/login")
-        .send({ email: user.email, password: user.password });
+        .send({ username: user.username, password: user.password });
 
         expect(response.statusCode).toBe(200);
 
@@ -153,5 +151,4 @@ describe("Auth Tests", () => {
 
         expect(response4.statusCode).toBe(400);
     });
-    
 });
