@@ -7,27 +7,45 @@ type Payload = {
     _id: string;
 };
 
-const register = async (req: Request, res: Response) => {
-    const { email, password } = req.body;
-    if (!email || !password) {
-        res.status(400).send('Email and password are required');
+const register = async (req: Request, res: Response): Promise<void> => {
+    const { username, email, password } = req.body;
+    const profilePicture = req.file ? req.file.path : "";
+
+    if (!username || !email || !password) {
+        res.status(400).json({ message: 'Username, email, and password are required' });
         return;
     }
+
+    // Validate username (must contain letters and numbers)
+    if (!/^(?=.*[a-zA-Z])(?=.*\d).+$/.test(username)) {
+        res.status(400).json({ message: "Username must contain both letters and numbers" });
+        return;
+    }
+
     try {
+        const existingUser = await userModel.findOne({ email });
+        if (existingUser) {
+            res.status(400).json({ message: "Email already in use" });
+            return;
+        }
+
         const salt = await bcrypt.genSalt(10);
         const hashedPassword = await bcrypt.hash(password, salt);
 
         const newUser: IUser = await userModel.create({ 
-            email: email, 
-            password: hashedPassword
+            username,
+            email, 
+            password: hashedPassword,
+            profilePicture,
+            refreshTokens: []
         });
-        console.log('New user:', newUser);
-        res.status(200).send(newUser);
+
+        res.status(201).json({ message: "User registered successfully", user: newUser });
         return;
 
     } catch (error) {  
         console.error(error);
-        res.status(500).send('Error registering user');
+        res.status(500).json({ message: "Error registering user" });
         return;
     }
 };
@@ -58,49 +76,49 @@ const generateTokens = (_id:string): {accessToken:string, refreshToken:string} |
     return { accessToken, refreshToken };
 };
 
-const login = async (req: Request, res: Response) => {
+const login = async (req: Request, res: Response): Promise<void> => {
     const { email, password } = req.body;
     if (!email || !password) {
-        res.status(400).send('Wrong email or password');
+        res.status(400).json({ message: 'Email and password are required' });
         return;
     }
+
     try {
-        const user = await userModel.findOne({ email: email });
+        const user = await userModel.findOne({ email });
         if (!user) {
-            res.status(400).send('Wrong email or password');
+            res.status(400).json({ message: 'Wrong email or password' });
             return;
         }
-        const validPassword = await bcrypt.compare(password, user.password); // returns true or false
+
+        const validPassword = await bcrypt.compare(password, user.password);
         if (!validPassword) {
-            res.status(400).send('Invalid password');
+            res.status(400).json({ message: 'Invalid password' });
             return;
         }
 
         const tokens = generateTokens(user._id);
-        
         if (!tokens) {
-            res.status(500).send('Error generating tokens');
+            res.status(500).json({ message: 'Error generating tokens' });
             return;
         }
 
-        const { accessToken, refreshToken } = tokens;
-
-        if (user.refreshTokens == null) {
-            user.refreshTokens = [];
-        }
-        user.refreshTokens.push(refreshToken);
+        user.refreshTokens = user.refreshTokens || [];
+        user.refreshTokens.push(tokens.refreshToken);
         await user.save();
 
-        res.status(200).send({
+        res.status(200).json({
+            username: user.username,  // Now returns username
             email: user.email,
-            _id: user._id, 
-            accessToken: accessToken,
-            refreshToken: refreshToken 
+            _id: user._id,
+            profilePicture: user.profilePicture, // Now returns profilePicture
+            accessToken: tokens.accessToken,
+            refreshToken: tokens.refreshToken
         });
         return;
+
     } catch (error) {
         console.error(error);
-        res.status(500).send('Error logging in');
+        res.status(500).json({ message: 'Error logging in' });
         return;
     }
 };

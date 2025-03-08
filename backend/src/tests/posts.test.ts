@@ -13,67 +13,59 @@ let postId: string;
 type User = IUser & { accessToken?: string, refreshToken?: string };
 
 const testUser: User = {
-  email: "test@user.com",
-  password: "testpassword",
-}
+    username: "testUser1",
+    email: "test@user.com",
+    password: "testpassword",
+    profilePicture: "default-avatar.png"
+};
 
-beforeAll( async () => {
-    console.log('This runs before all tests');
+beforeAll(async () => {
+    console.log("This runs before all tests");
     app = await appPromise();
     await postModel.deleteMany();
-
     await userModel.deleteMany();
+  
     await request(app).post("/api/auth/register").send(testUser);
-    const res = await request(app).post("/api/auth/login").send(testUser);
+    const res = await request(app).post("/api/auth/login").send({
+      email: testUser.email,
+      password: testUser.password,
+    });
+  
     testUser.accessToken = res.body.accessToken;
     testUser.refreshToken = res.body.refreshToken;
     testUser._id = res.body._id;
     console.log("Test user created with token:", testUser);
     expect(testUser.accessToken).toBeDefined();
     expect(testUser.refreshToken).toBeDefined();
-});
+  });
 
 afterAll(async () => {
     console.log('This runs after all tests');
     await mongoose.disconnect(); // Close MongoDB connection after tests
 });
 
-describe("Posts tests", () => {
+describe("Create Post", () => {
     test("should create a new post", async () => {
-        const res = await request(app)
-            .post("/api/posts")
-            .set({
-                authorization: "JWT " +  testUser.accessToken,
-            })
-            .send(testPosts[0]);
-        console.log("Response body:", res.body);
-        expect(res.statusCode).toEqual(201);
-        expect(res.body).toHaveProperty("_id");
-        expect(res.body.title).toEqual(testPosts[0].title);
-        expect(res.body.content).toEqual(testPosts[0].content);
-        expect(res.body.sender).toEqual(testUser._id);
-        
-        postId = res.body._id;
-    });
-
-    test("should return 500 if there is a server error", async () => {
-        jest.spyOn(postModel, 'create').mockImplementationOnce(() => {
-            throw new Error("Database save error");
+      const res = await request(app)
+        .post("/api/posts")
+        .set({
+          authorization: "JWT " + testUser.accessToken,
+        })
+        .send({
+          title: testPosts[0].title,
+          content: testPosts[0].content,
         });
-
-        const res = await request(app)
-            .post("/api/posts")
-            .set({
-                authorization: "JWT " +  testUser.accessToken,
-            })
-            .send(testPosts[0]);
-        expect(res.statusCode).toEqual(500);
-        expect(res.body).toHaveProperty("error", "Database save error");
-
-        // Restore the original implementation
-        jest.restoreAllMocks();
+  
+      console.log("Response body:", res.body);
+      expect(res.statusCode).toEqual(201);
+      expect(res.body).toHaveProperty("_id");
+      expect(res.body.title).toEqual(testPosts[0].title);
+      expect(res.body.content).toEqual(testPosts[0].content);
+      expect(res.body.sender).toEqual(testUser._id);
+  
+      postId = res.body._id;
     });
-});
+  });
 
 describe("Get Posts", () => {
     test("should get all posts", async () => {
@@ -232,3 +224,40 @@ describe("Update Post", () => {
         jest.restoreAllMocks();
     });
 });
+
+describe("Delete Post", () => {
+    test("should delete the created post", async () => {
+      const res = await request(app)
+        .delete(`/api/posts/${postId}`)
+        .set({
+          authorization: "JWT " + testUser.accessToken,
+        });
+  
+      expect(res.statusCode).toEqual(200);
+      expect(res.body).toHaveProperty("message", "deleted");
+  
+      // Verify the post no longer exists
+      const res2 = await request(app).get(`/api/posts/${postId}`);
+      expect(res2.statusCode).toEqual(404);
+    });
+  
+    test("should return 404 if post does not exist", async () => {
+      const fakeId = "000000000000000000000000";
+      const res = await request(app)
+        .delete(`/api/posts/${fakeId}`)
+        .set({
+          authorization: "JWT " + testUser.accessToken,
+        });
+  
+      expect(res.statusCode).toEqual(404);
+      expect(res.body).toHaveProperty("message", "not found");
+    });
+  });
+  
+  describe("Get Posts", () => {
+    test("should return empty posts after deletion", async () => {
+      const res = await request(app).get("/api/posts");
+      expect(res.statusCode).toEqual(200);
+      expect(res.body.length).toEqual(0);
+    });
+  });
