@@ -10,7 +10,7 @@
     "testAuth": "copy .env_test .env && tsc && jest --detectOpenHandles --forceExit auth.test.ts",
     "testPost": "copy .env_test .env && tsc && jest --detectOpenHandles --forceExit posts.test.ts",
     "testComment": "copy .env_test .env && tsc && jest --detectOpenHandles --forceExit comments.test.ts",
-    "testFile": "copy .env_test .env && tsc && jest --detectOpenHandles --forceExit files.test.ts",
+    "testUpload": "copy .env_test .env && tsc && jest --detectOpenHandles --forceExit uploads.test.ts",
     "lint": "eslint . --ext .ts"
   },
   "author": "Hila & Elrom",

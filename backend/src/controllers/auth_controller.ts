@@ -9,7 +9,7 @@ type Payload = {
 
 const register = async (req: Request, res: Response): Promise<void> => {
     const { username, email, password } = req.body;
-    const profilePicture = req.file ? req.file.path : "";
+    const profilePicture = req.file ? `/uploads/${req.file.filename}` : "/uploads/default-avatar.png";
 
     if (!username || !email || !password) {
         res.status(400).json({ message: 'Username, email, and password are required' });

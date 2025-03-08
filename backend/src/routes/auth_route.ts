@@ -1,8 +1,7 @@
 import express from "express";
 import authController from "../controllers/auth_controller";
-import multer from "multer";
+import { upload } from "./upload_route";
 
-const upload = multer({ dest: 'uploads/' });
 const router = express.Router();
 
 /**

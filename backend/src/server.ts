@@ -5,6 +5,7 @@ import dotenv from 'dotenv';
 import mongoose from 'mongoose';
 import swaggerUi from 'swagger-ui-express';
 import swaggerJsdoc from 'swagger-jsdoc';
+import path from "path";
 
 // Load environment variables
 dotenv.config();
@@ -33,7 +34,6 @@ console.log("Swagger docs available at http://localhost:" + process.env.PORT + "
 import postRouter from './routes/posts_route';
 import commentRouter from './routes/comments_route';
 import authRouter from './routes/auth_route';
-import fileRouter from './routes/file_route';
 
 // Create a function to initialize the server
 const initApp = async (): Promise<Express> => {
@@ -56,7 +56,7 @@ const initApp = async (): Promise<Express> => {
     app.use('/api/comments', commentRouter);
     app.use('/api/auth', authRouter);
     app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(specs));
-    app.use('/file', fileRouter);
+    app.use('/api/uploads', express.static(path.join(__dirname, "../uploads")));
   
     return app;
   } catch (error) {
