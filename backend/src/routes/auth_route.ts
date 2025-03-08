@@ -113,7 +113,7 @@ router.post("/register", upload.single("profilePicture"), authController.registe
  * @swagger
  * /api/auth/login:
  *   post:
- *     summary: Logs in a user and returns authentication tokens
+ *     summary: Logs in a user with username and password
  *     tags: 
  *       - Auth
  *     requestBody:
@@ -121,7 +121,17 @@ router.post("/register", upload.single("profilePicture"), authController.registe
  *       content:
  *         application/json:
  *           schema:
- *             $ref: '#/components/schemas/LoginUser'
+ *             type: object
+ *             required:
+ *               - username
+ *               - password
+ *             properties:
+ *               username:
+ *                 type: string
+ *                 description: The username of the user
+ *               password:
+ *                 type: string
+ *                 description: The user password
  *     responses:
  *       200:
  *         description: The user logged in successfully

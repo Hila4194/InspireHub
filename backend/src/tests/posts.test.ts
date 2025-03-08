@@ -6,7 +6,6 @@ import testPosts from "./test_posts.json";
 import userModel, { IUser } from "../models/user_model";
 import { Express } from "express";
 
-
 let app: Express;
 let postId: string;
 
@@ -27,7 +26,7 @@ beforeAll(async () => {
   
     await request(app).post("/api/auth/register").send(testUser);
     const res = await request(app).post("/api/auth/login").send({
-      email: testUser.email,
+      username: testUser.username, // Changed from email to username
       password: testUser.password,
     });
   
@@ -37,7 +36,7 @@ beforeAll(async () => {
     console.log("Test user created with token:", testUser);
     expect(testUser.accessToken).toBeDefined();
     expect(testUser.refreshToken).toBeDefined();
-  });
+});
 
 afterAll(async () => {
     console.log('This runs after all tests');
@@ -234,7 +233,7 @@ describe("Delete Post", () => {
         });
   
       expect(res.statusCode).toEqual(200);
-      expect(res.body).toHaveProperty("message", "deleted");
+      expect(res.body).toHaveProperty("message", "Post and associated comments deleted successfully");
   
       // Verify the post no longer exists
       const res2 = await request(app).get(`/api/posts/${postId}`);
@@ -250,7 +249,7 @@ describe("Delete Post", () => {
         });
   
       expect(res.statusCode).toEqual(404);
-      expect(res.body).toHaveProperty("message", "not found");
+      expect(res.body).toHaveProperty("message", "Post not found");
     });
   });
   

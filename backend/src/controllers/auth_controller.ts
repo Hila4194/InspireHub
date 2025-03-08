@@ -77,16 +77,16 @@ const generateTokens = (_id:string): {accessToken:string, refreshToken:string} |
 };
 
 const login = async (req: Request, res: Response): Promise<void> => {
-    const { email, password } = req.body;
-    if (!email || !password) {
-        res.status(400).json({ message: 'Email and password are required' });
+    const { username, password } = req.body;
+    if (!username || !password) {
+        res.status(400).json({ message: 'Username and password are required' });
         return;
     }
 
     try {
-        const user = await userModel.findOne({ email });
+        const user = await userModel.findOne({ username });
         if (!user) {
-            res.status(400).json({ message: 'Wrong email or password' });
+            res.status(400).json({ message: 'Wrong username or password' });
             return;
         }
 
@@ -102,17 +102,19 @@ const login = async (req: Request, res: Response): Promise<void> => {
             return;
         }
 
+        const { accessToken, refreshToken } = tokens;
+
         user.refreshTokens = user.refreshTokens || [];
-        user.refreshTokens.push(tokens.refreshToken);
+        user.refreshTokens.push(refreshToken);
         await user.save();
 
         res.status(200).json({
-            username: user.username,  // Now returns username
+            username: user.username,
             email: user.email,
             _id: user._id,
-            profilePicture: user.profilePicture, // Now returns profilePicture
-            accessToken: tokens.accessToken,
-            refreshToken: tokens.refreshToken
+            profilePicture: user.profilePicture,
+            accessToken,
+            refreshToken
         });
         return;
 

@@ -27,7 +27,7 @@ const testUser: User = {
   
     await request(app).post("/api/auth/register").send(testUser);
     const res = await request(app).post("/api/auth/login").send({
-      email: testUser.email,
+      username: testUser.username,
       password: testUser.password,
     });
   
