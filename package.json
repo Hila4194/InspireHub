@@ -4,15 +4,16 @@
   "description": "Final_Project",
   "main": "app.js",
   "scripts": {
-    "start": "copy .env_dev .env && tsc && node ./dist/app.js",
-    "dev": "copy .env_dev .env && nodemon ./backend/src/app.ts",
-    "test": "copy .env_test .env && tsc && jest --detectOpenHandles --forceExit --runInBand",
-    "testAuth": "copy .env_test .env && tsc && jest --detectOpenHandles --forceExit auth.test.ts",
-    "testPost": "copy .env_test .env && tsc && jest --detectOpenHandles --forceExit posts.test.ts",
-    "testComment": "copy .env_test .env && tsc && jest --detectOpenHandles --forceExit comments.test.ts",
-    "testUpload": "copy .env_test .env && tsc && jest --detectOpenHandles --forceExit uploads.test.ts",
-    "lint": "eslint . --ext .ts"
-  },
+  "start": "copy .env_dev .env && tsc && node ./dist/app.js",
+  "dev": "copy .env_dev .env && nodemon --config nodemon.json",
+  "test": "copy .env_test .env && tsc && jest --detectOpenHandles --forceExit",
+  "test:watch": "jest --watch",
+  "testAuth": "copy .env_test .env && tsc && jest --detectOpenHandles --forceExit auth.test.ts",
+  "testPost": "copy .env_test .env && tsc && jest --detectOpenHandles --forceExit posts.test.ts",
+  "testComment": "copy .env_test .env && tsc && jest --detectOpenHandles --forceExit comments.test.ts",
+  "testUpload": "copy .env_test .env && tsc && jest --detectOpenHandles --forceExit uploads.test.ts",
+  "lint": "eslint . --ext .ts"
+},
   "author": "Hila & Elrom",
   "license": "ISC",
   "dependencies": {
