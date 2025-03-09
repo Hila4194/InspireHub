@@ -58,9 +58,6 @@ const initApp = async (): Promise<Express> => {
         await mongoose.connect(process.env.DATABASE_URL);
         console.log('✅ Connected to Database');
 
-        const app = express();
-        app.use(express.json());
-
         // Static file serving
         app.use("/public/", express.static("backend/public"));
         app.use('/api/uploads', express.static(path.join(__dirname, "../uploads")));
