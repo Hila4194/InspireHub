@@ -2,53 +2,50 @@ import { Request, Response, NextFunction } from 'express';
 import userModel, { IUser } from '../models/user_model';
 import bcrypt from 'bcrypt';
 import jwt, { SignOptions } from 'jsonwebtoken';
+import path from 'path';
 
 type Payload = {
     _id: string;
 };
 
 const register = async (req: Request, res: Response): Promise<void> => {
-    const { username, email, password } = req.body;
-    const profilePicture = req.file ? `/uploads/${req.file.filename}` : "/uploads/default-avatar.png";
-
-    if (!username || !email || !password) {
-        res.status(400).json({ message: 'Username, email, and password are required' });
+    try {
+      const { username, email, password } = req.body;
+      const profilePicture = req.file
+      ? `/uploads/${req.body.email.replace(/[^a-zA-Z0-9]/g, "_")}${path.extname(req.file.originalname)}`
+      : "/uploads/default-avatar.png";    
+            
+      if (!username || !email || !password) {
+        res.status(400).json({ message: "Username, email, and password are required" });
         return;
-    }
-
-    // Validate username (must contain letters and numbers)
-    if (!/^(?=.*[a-zA-Z])(?=.*\d).+$/.test(username)) {
+      }
+  
+      if (!/^(?=.*[a-zA-Z])(?=.*\d).+$/.test(username)) {
         res.status(400).json({ message: "Username must contain both letters and numbers" });
         return;
-    }
-
-    try {
-        const existingUser = await userModel.findOne({ email });
-        if (existingUser) {
-            res.status(400).json({ message: "Email already in use" });
-            return;
-        }
-
-        const salt = await bcrypt.genSalt(10);
-        const hashedPassword = await bcrypt.hash(password, salt);
-
-        const newUser: IUser = await userModel.create({ 
-            username,
-            email, 
-            password: hashedPassword,
-            profilePicture,
-            refreshTokens: []
-        });
-
-        res.status(201).json({ message: "User registered successfully", user: newUser });
+      }
+  
+      const existingUser = await userModel.findOne({ email });
+      if (existingUser) {
+        res.status(400).json({ message: "Email already in use" });
         return;
-
-    } catch (error) {  
-        console.error(error);
-        res.status(500).json({ message: "Error registering user" });
-        return;
+      }
+  
+      const hashedPassword = await bcrypt.hash(password, 10);
+      const newUser: IUser = await userModel.create({
+        username,
+        email,
+        password: hashedPassword,
+        profilePicture,
+        refreshTokens: [],
+      });
+  
+      res.status(201).json({ message: "User registered successfully", user: newUser });
+    } catch (error) {
+      console.error("❌ Error registering user:", error);
+      res.status(500).json({ message: "Error registering user" });
     }
-};
+  };
 
 const generateTokens = (_id:string): {accessToken:string, refreshToken:string} | null => {
     const random = Math.floor(Math.random() * 1000000);
@@ -108,11 +105,13 @@ const login = async (req: Request, res: Response): Promise<void> => {
         user.refreshTokens.push(refreshToken);
         await user.save();
 
+        const profilePictureUrl = `${process.env.API_BASE_URL}${user.profilePicture}`;
+
         res.status(200).json({
             username: user.username,
             email: user.email,
             _id: user._id,
-            profilePicture: user.profilePicture,
+            profilePicture: profilePictureUrl,
             accessToken,
             refreshToken
         });

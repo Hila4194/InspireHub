@@ -1,6 +1,10 @@
 import express from "express";
 import authController from "../controllers/auth_controller";
 import { upload } from "./upload_route";
+import userController from "../controllers/user_controller";
+import { authMiddleware } from '../controllers/auth_controller';
+import multer from "multer";
+import path from "path";
 
 const router = express.Router();
 
@@ -196,5 +200,8 @@ router.post("/refresh", authController.refresh);
  *         description: Internal server error
  */
 router.post("/logout", authController.logout);
+
+// ✅ Update Profile Route (User must be logged in)
+router.put("/update-profile/:id", authMiddleware, upload.single("profilePicture"), userController.updateProfile);
 
 export default router;
