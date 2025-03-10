@@ -2,7 +2,7 @@ import express from "express";
 import authController from "../controllers/auth_controller";
 import { upload } from "./upload_route";
 import userController from "../controllers/user_controller";
-import { authMiddleware } from '../controllers/auth_controller';
+import { authMiddleware } from "../controllers/auth_controller";
 import multer from "multer";
 import path from "path";
 
@@ -13,14 +13,14 @@ const router = express.Router();
  * tags:
  *   - name: Auth
  *     description: Authentication API
- * 
+ *
  * components:
  *   securitySchemes:
  *     bearerAuth:
  *       type: http
  *       scheme: bearer
  *       bearerFormat: JWT
- * 
+ *
  *   schemas:
  *     User:
  *       type: object
@@ -42,7 +42,7 @@ const router = express.Router();
  *         username: "User123"
  *         email: "bob@gmail.com"
  *         password: "123456"
- * 
+ *
  *     LoginUser:
  *       type: object
  *       required:
@@ -56,7 +56,7 @@ const router = express.Router();
  *       example:
  *         email: "bob@gmail.com"
  *         password: "123456"
- * 
+ *
  *     RefreshToken:
  *       type: object
  *       required:
@@ -66,7 +66,7 @@ const router = express.Router();
  *           type: string
  *       example:
  *         refreshToken: "some-refresh-token"
- * 
+ *
  *     ProfilePicture:
  *       type: object
  *       properties:
@@ -80,7 +80,7 @@ const router = express.Router();
  * /api/auth/register:
  *   post:
  *     summary: Registers a new user with a username, email, password, and optional profile picture
- *     tags: 
+ *     tags:
  *       - Auth
  *     requestBody:
  *       required: true
@@ -110,7 +110,11 @@ const router = express.Router();
  *       500:
  *         description: Internal server error
  */
-router.post("/register", upload.single("profilePicture"), authController.register);
+router.post(
+  "/register",
+  upload.single("profilePicture"),
+  authController.register
+);
 router.post("/google", authController.googleSignin);
 
 /**
@@ -118,7 +122,7 @@ router.post("/google", authController.googleSignin);
  * /api/auth/login:
  *   post:
  *     summary: Logs in a user with username and password
- *     tags: 
+ *     tags:
  *       - Auth
  *     requestBody:
  *       required: true
@@ -153,7 +157,7 @@ router.post("/login", authController.login);
  * /api/auth/refresh:
  *   post:
  *     summary: Generates a new access token using a refresh token
- *     tags: 
+ *     tags:
  *       - Auth
  *     requestBody:
  *       required: true
@@ -180,7 +184,7 @@ router.post("/refresh", authController.refresh);
  * /api/auth/logout:
  *   post:
  *     summary: Logs out a user and invalidates the refresh token
- *     tags: 
+ *     tags:
  *       - Auth
  *     security:
  *       - bearerAuth: []
@@ -203,6 +207,11 @@ router.post("/refresh", authController.refresh);
 router.post("/logout", authController.logout);
 
 // ✅ Update Profile Route (User must be logged in)
-router.put("/update-profile/:id", authMiddleware, upload.single("profilePicture"), userController.updateProfile);
+router.put(
+  "/update-profile/:id",
+  authMiddleware,
+  upload.single("profilePicture"),
+  userController.updateProfile
+);
 
 export default router;
