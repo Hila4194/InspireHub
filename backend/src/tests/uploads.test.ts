@@ -29,7 +29,7 @@ describe("Uploads Tests", () => {
                 .post("/api/auth/register")
                 .set("Content-Type", "multipart/form-data")
                 .field("username", "testUser1234")
-                .field("email", "test4@user.com")
+                .field("email", "test1@user.com")
                 .field("password", "testpassword")
                 .attach("profilePicture", filePath);
 

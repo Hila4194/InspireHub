@@ -2,6 +2,7 @@ import express from 'express';
 const router = express.Router();
 import postController from '../controllers/posts_controller';
 import { authMiddleware } from '../controllers/auth_controller';
+import { upload } from './upload_route';
 
 /**
  * @swagger
@@ -96,7 +97,7 @@ import { authMiddleware } from '../controllers/auth_controller';
  *       500:
  *         description: Internal server error
  */
-router.post('/', authMiddleware,  postController.createPost.bind(postController));
+router.post("/", authMiddleware, upload.single("file"), (req, res) => postController.createPost(req, res)); // ✅ Ensure file uploads work
 
 /**
  * @swagger

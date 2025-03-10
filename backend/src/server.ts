@@ -56,6 +56,8 @@ console.log(`Swagger docs available at http://localhost:${process.env.PORT}/api-
 import postRouter from './routes/posts_route';
 import commentRouter from './routes/comments_route';
 import authRouter from './routes/auth_route';
+import { router as uploadRouter } from "./routes/upload_route";
+
 
 // 🔹 Function to Initialize the Server
 const initApp = async (): Promise<Express> => {
@@ -77,6 +79,7 @@ const initApp = async (): Promise<Express> => {
         app.use('/api/comments', commentRouter);
         app.use('/api/auth', authRouter);
         app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(specs));
+        app.use("/api/uploads", uploadRouter);
 
         return app;
     } catch (error) {
