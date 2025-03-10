@@ -28,8 +28,8 @@ describe("Uploads Tests", () => {
             const response = await request(app)
                 .post("/api/auth/register")
                 .set("Content-Type", "multipart/form-data")
-                .field("username", "testUser123")
-                .field("email", "test2@user.com")
+                .field("username", "testUser1234")
+                .field("email", "test4@user.com")
                 .field("password", "testpassword")
                 .attach("profilePicture", filePath);
 

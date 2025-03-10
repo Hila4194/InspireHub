@@ -6,6 +6,7 @@ import mongoose from 'mongoose';
 import swaggerUi from 'swagger-ui-express';
 import swaggerJsdoc from 'swagger-jsdoc';
 import path from "path";
+import cors from "cors";
 
 dotenv.config(); // Load environment variables
 
@@ -13,12 +14,21 @@ const app = express();
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-// 🔹 CORS Configuration
-app.use((req, res, next) => {
-    res.header("Access-Control-Allow-Origin", "*"); // Allow frontend
-    res.header("Access-Control-Allow-Headers", "Content-Type, Authorization");
-    res.header("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE");
-    next();
+// ✅ More Robust CORS Configuration
+app.use(cors({
+  origin: "http://localhost:5173", // ✅ Allow frontend access
+  methods: "GET, POST, PUT, DELETE, OPTIONS", // ✅ Ensure all methods are allowed
+  allowedHeaders: "Content-Type, Authorization",
+  credentials: true, // ✅ Allows cookies & auth headers
+}));
+
+// ✅ Ensure Preflight Requests Are Handled
+app.options("*", (req, res) => {
+  res.header("Access-Control-Allow-Origin", "http://localhost:5173");
+  res.header("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS");
+  res.header("Access-Control-Allow-Headers", "Content-Type, Authorization");
+  res.header("Access-Control-Allow-Credentials", "true");
+  res.sendStatus(200);
 });
 
 // 🔹 Swagger Configuration
@@ -60,7 +70,7 @@ const initApp = async (): Promise<Express> => {
 
         // Static file serving
         app.use("/public/", express.static("backend/public"));
-        app.use('/api/uploads', express.static(path.join(__dirname, "../uploads")));
+        app.use('/uploads', express.static(path.join(__dirname, "../uploads")));
 
         // 🔹 Use Routes
         app.use('/api/posts', postRouter);
