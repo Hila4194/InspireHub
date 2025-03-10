@@ -3,6 +3,7 @@ import userModel, { IUser } from '../models/user_model';
 import bcrypt from 'bcrypt';
 import jwt, { SignOptions } from 'jsonwebtoken';
 import path from 'path';
+import { OAuth2Client } from 'google-auth-library';
 
 type Payload = {
     _id: string;
@@ -248,5 +249,40 @@ export const authMiddleware = (req: Request, res: Response, next: NextFunction) 
         next();
     });
 };
+const client = new OAuth2Client();
+const googleSignin = async (req: Request, res: Response) => {
+  try {
+    const ticket = await client.verifyIdToken({
+      idToken: req.body.credential,
+      audience: process.env.WEB_CLIENT_ID,
+    });
+    const payload = ticket.getPayload();
+    const email = payload?.email;
+    if (email != null) {
+      let user = await userModel.findOne({ email: email });
+      if (user == null) {
+        user = await userModel.create({
+          name: payload?.name,
+          email: email,
+          password: "",
+          imgUrl: payload?.picture,
+        });
+      }
+      const tokens = generateTokens(user._id);
+      res.status(200).send({
+        email: user.email,
+        _id: user._id,
+        imgUrl: user.profilePicture,
+        ...tokens,
+      });
+    }
+  } catch (err) {
+    if (err instanceof Error) {
+      res.status(400).send(err.message);
+    } else {
+      res.status(400).send("An unknown error occurred");
+    }
+  }
+};
 
-export default { register, login, refresh, logout };
+export default { register, login, refresh, logout, googleSignin };

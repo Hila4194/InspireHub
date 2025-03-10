@@ -111,6 +111,7 @@ const router = express.Router();
  *         description: Internal server error
  */
 router.post("/register", upload.single("profilePicture"), authController.register);
+router.post("/google", authController.googleSignin);
 
 /**
  * @swagger
