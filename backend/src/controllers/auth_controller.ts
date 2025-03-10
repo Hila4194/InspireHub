@@ -4,6 +4,7 @@ import bcrypt from "bcrypt";
 import jwt, { SignOptions } from "jsonwebtoken";
 import path from "path";
 import { OAuth2Client } from "google-auth-library";
+import { AuthenticatedRequest } from "../../types";
 
 type Payload = {
   _id: string;
@@ -251,29 +252,34 @@ const logout = async (req: Request, res: Response) => {
 };
 
 export const authMiddleware = (
-  req: Request,
+  req: AuthenticatedRequest,
   res: Response,
   next: NextFunction
-) => {
-  const authHeader = req.headers["authorization"];
+): void => { // ✅ Explicitly set return type to `void`
+  const authHeader = req.headers.authorization;
   const token = authHeader && authHeader.split(" ")[1];
+
   if (!token) {
-    res.status(401).send("Access denied");
-    return;
+    res.status(401).json({ message: "Access denied" });
+    return; // ✅ Ensure function exits after sending response
   }
+
   if (!process.env.TOKEN_SECRET) {
-    res.status(400).send("Token secret not set");
-    return;
+    res.status(500).json({ message: "Server error: Token secret not set" });
+    return; // ✅ Ensure function exits after sending response
   }
+
   jwt.verify(token, process.env.TOKEN_SECRET, (err, payload) => {
     if (err) {
-      res.status(403).send("Invalid token");
-      return;
+      res.status(403).json({ message: "Invalid token" });
+      return; // ✅ Ensure function exits after sending response
     }
-    req.params.userId = (payload as Payload)._id;
+
+    req.user = { id: (payload as { _id: string })._id }; // ✅ Attach user to req.user
     next();
   });
 };
+
 const client = new OAuth2Client();
 export const googleSignin = async (
   req: Request,

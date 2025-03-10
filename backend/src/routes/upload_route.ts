@@ -14,16 +14,10 @@ if (!fs.existsSync(uploadDir)) {
 
 // ✅ Configure Multer Storage
 const storage = multer.diskStorage({
-  destination: (req, file, cb) => {
-    cb(null, uploadDir); // Save images to the uploads folder
-  },
-  filename: (req, file, cb) => {
-    if (!req.body.email) {
-      return cb(new Error("Email is required for file naming"), "");
+    destination: uploadDir,
+    filename: (req, file, cb) => {
+        cb(null, `${Date.now()}-${file.originalname.replace(/[^a-zA-Z0-9.]/g, "_")}`);
     }
-    const sanitizedEmail = req.body.email.replace(/[^a-zA-Z0-9]/g, "_"); // Ensure safe filename
-    cb(null, `${sanitizedEmail}${path.extname(file.originalname)}`);
-  },
 });
 
 // ✅ Filter only images
@@ -42,7 +36,6 @@ const upload = multer({
     limits: { fileSize: 5 * 1024 * 1024 }, // ✅ Limit to 5MB
 });
 
-// ✅ Upload Profile Picture - Only after login
 /**
  * @swagger
  * /api/uploads/profile-picture:
@@ -79,6 +72,21 @@ router.post("/profile-picture", authMiddleware, upload.single("file"), async (re
         
         res.json({ message: "Profile picture uploaded successfully", fileName: req.file.filename });
     } catch (error) {
+        res.status(500).json({ message: "Internal server error" });
+    }
+});
+
+router.post("/post-image", authMiddleware, upload.single("file"), async (req, res): Promise<void> => {
+    try {
+        if (!req.file) {
+            res.status(400).json({ message: "No file uploaded or invalid file type" });
+            return;
+        }
+        const imageUrl = `/uploads/${req.file.filename}`; // ✅ Correct Image URL
+        console.log("✅ Post image uploaded:", imageUrl);
+        res.json({ url: imageUrl });
+    } catch (error) {
+        console.error("❌ Error handling post image upload:", error);
         res.status(500).json({ message: "Internal server error" });
     }
 });
