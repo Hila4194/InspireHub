@@ -174,7 +174,7 @@ router.get('/:id', postController.getPostById.bind(postController));
  *       500:
  *         description: Internal server error
  */
-router.get('/sender/:sender', postController.getPostsBySender.bind(postController));
+router.get("/user/:userId", authMiddleware, postController.getPostsBySender.bind(postController));
 
 /**
  * @swagger
