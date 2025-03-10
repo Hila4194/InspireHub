@@ -39,17 +39,26 @@ class PostsController extends BaseController<IPost> {
         }
     }    
 
-    async getPosts (req: Request, res: Response) {
-        super.getAll(req, res, "");
-
-    };
+    async getPosts(req: Request, res: Response) {
+        try {
+            const posts = await this.model.find().populate("sender", "username");
+            res.json(posts);
+        } catch (error) {
+            res.status(500).json({ message: "Error fetching posts" });
+        }
+    }    
 
     async getPostById (req: Request, res: Response): Promise<void> {
         super.getById(req, res);
     };
 
-    async getPostsBySender (req: Request, res: Response) {
-        super.getAll(req, res, 'sender');
+    async getPostsBySender(req: Request, res: Response): Promise<void> {
+        try {
+            const posts = await postModel.find({ sender: req.params.userId });
+            res.status(200).json(posts);
+        } catch (error) {
+            res.status(500).json({ message: (error as Error).message });
+        }
     }
 
     async updatePost(req: Request, res: Response): Promise<void> {
