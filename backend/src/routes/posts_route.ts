@@ -210,7 +210,7 @@ router.get("/user/:userId", authMiddleware, postController.getPostsBySender.bind
  *       500:
  *         description: Internal server error
  */
-router.put('/:id', authMiddleware, postController.updatePost.bind(postController));
+router.put("/:id", authMiddleware, upload.single("file"), postController.updatePost.bind(postController));
 
 /**
  * @swagger

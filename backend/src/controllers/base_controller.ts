@@ -56,21 +56,34 @@ class BaseController<T> {
         }
     };
     
-    async update (req: Request, res: Response): Promise<void> {
-        const body = req.body;
+    async update(req: Request, res: Response): Promise<void> {
         try {
-            const item = await this.model.findById(req.params.id);
-            if (!item) {
-                res.status(404).json({ message: 'not found' });
+            console.log("📌 Updating Post with ID:", req.params.id);
+            console.log("📌 Update Data:", req.body);
+    
+            const allowedUpdates = ["title", "content", "imageUrl"];
+            const updateData: Record<string, any> = {};
+    
+            for (const key of allowedUpdates) {
+                if (req.body[key] !== undefined) {
+                    updateData[key] = req.body[key];
+                }
+            }
+    
+            const updatedItem = await this.model.findByIdAndUpdate(req.params.id, updateData, { new: true });
+    
+            if (!updatedItem) {
+                res.status(404).json({ message: "Post not found" });
                 return;
             }
-            item.set(body);
-            await item.save();
-            res.json(item);
+    
+            console.log("✅ Post Updated Successfully:", updatedItem);
+            res.json(updatedItem);
         } catch (err) {
-            res.status(500).json({ error: (err as Error).message });
+            console.error("❌ Error updating post:", err);
+            res.status(500).json({ message: "Failed to update post" });
         }
-    };
+    }    
 
     async delete (req: Request, res: Response): Promise<void> {
         try {
