@@ -77,16 +77,23 @@ class PostsController extends BaseController<IPost> {
 
     async updatePost(req: Request, res: Response): Promise<void> {
         try {
-            const body = req.body;
-            const imageUrl = req.file ? `/uploads/${req.file.filename}` : "";
-
-            const post = { title: body.title, content: body.content, sender: body.sender, imageUrl };
-            req.body = post;
+            console.log("📌 Incoming Update Request:", req.body);
+            console.log("📌 Incoming File:", req.file ? req.file.filename : "No file uploaded");
+    
+            // ✅ Process Image Upload if present
+            if (req.file) {
+                req.body.imageUrl = `/uploads/${req.file.filename}`;
+            }
+    
+            // ✅ Ensure sender field is not modified
+            delete req.body.sender;
+    
             super.update(req, res);
         } catch (error) {
+            console.error("❌ Error updating post:", error);
             res.status(500).json({ message: "Failed to update post." });
         }
-    };
+    }    
 
     async deletePost(req: Request, res: Response): Promise<void> {
         const { id } = req.params;
