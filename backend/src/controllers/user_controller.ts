@@ -8,12 +8,15 @@ const updateProfile = async (req: Request, res: Response): Promise<void> => {
         const { username, email } = req.body;
         let profilePicture = undefined;
 
-        // ✅ If a new profile picture is uploaded, set the file path
+        console.log("📌 Incoming Profile Update:", req.body);
+        console.log("📌 Incoming File:", req.file ? req.file.filename : "No file uploaded");
+
+        // ✅ If a new profile picture is uploaded, store the correct file path
         if (req.file) {
             profilePicture = `/uploads/${req.file.filename}`;
         }
 
-        // ✅ Update user details
+        // ✅ Update user details in MongoDB
         const updatedUser = await userModel.findByIdAndUpdate(
             userId,
             { username, email, ...(profilePicture && { profilePicture }) }, // Only update profilePicture if provided
@@ -21,10 +24,12 @@ const updateProfile = async (req: Request, res: Response): Promise<void> => {
         );
 
         if (!updatedUser) {
+            console.error("❌ User not found:", userId);
             res.status(404).json({ message: "User not found" });
             return;
         }
 
+        console.log("✅ Updated User:", updatedUser);
         res.json(updatedUser);
     } catch (error) {
         console.error("❌ Error updating profile:", error);

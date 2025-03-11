@@ -13,11 +13,7 @@ type Payload = {
 const register = async (req: Request, res: Response): Promise<void> => {
   try {
     const { username, email, password } = req.body;
-    const profilePicture = req.file
-      ? `/uploads/${req.body.email.replace(/[^a-zA-Z0-9]/g, "_")}${path.extname(
-          req.file.originalname
-        )}`
-      : "/uploads/default-avatar.png";
+    const profilePicture = req.file ? `/uploads/${req.file.filename}` : "/uploads/default-avatar.png";
 
     if (!username || !email || !password) {
       res

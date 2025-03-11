@@ -12,11 +12,12 @@ if (!fs.existsSync(uploadDir)) {
     fs.mkdirSync(uploadDir, { recursive: true });
 }
 
-// ✅ Configure Multer Storage
+// ✅ Configure Multer Storage with Fixed Filenames
 const storage = multer.diskStorage({
     destination: uploadDir,
     filename: (req, file, cb) => {
-        cb(null, `${Date.now()}-${file.originalname.replace(/[^a-zA-Z0-9.]/g, "_")}`);
+        const safeFilename = file.originalname.replace(/[^a-zA-Z0-9.]/g, "_"); // ✅ Remove special characters
+        cb(null, safeFilename); // ✅ Keep original filename (sanitized)
     }
 });
 
@@ -69,8 +70,12 @@ router.post("/profile-picture", authMiddleware, upload.single("file"), async (re
             res.status(400).json({ message: "No file uploaded or invalid file type" });
             return;
         }
-        
-        res.json({ message: "Profile picture uploaded successfully", fileName: req.file.filename });
+
+        const imageUrl = `/uploads/${req.file.filename}`; // ✅ Ensure filename matches saved file
+
+        console.log("✅ Profile picture uploaded:", imageUrl);
+
+        res.json({ url: imageUrl });
     } catch (error) {
         res.status(500).json({ message: "Internal server error" });
     }

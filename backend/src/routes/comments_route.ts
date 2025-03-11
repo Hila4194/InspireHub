@@ -254,6 +254,6 @@ router.delete('/:id', authMiddleware, commentController.deleteComment.bind(comme
  *       500:
  *         description: Internal server error
  */
-router.get('/post/:postId', commentController.getCommentsByPost.bind(commentController));
+router.get("/post/:postId", authMiddleware, commentController.getCommentsByPost.bind(commentController));
 
 export default router;

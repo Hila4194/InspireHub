@@ -54,12 +54,26 @@ class PostsController extends BaseController<IPost> {
 
     async getPostsBySender(req: Request, res: Response): Promise<void> {
         try {
-            const posts = await postModel.find({ sender: req.params.userId });
-            res.status(200).json(posts);
+            const userId = req.params.userId || req.query.sender; // ✅ Handle both cases
+    
+            if (!userId) {
+                res.status(400).json({ error: "User ID is required." });
+                return;
+            }
+    
+            const posts = await this.model.find({ sender: userId }).populate("sender", "username"); // ✅ Ensure username is included
+    
+            if (!posts.length) {
+                res.status(404).json({ message: "No posts found for this user." });
+                return;
+            }
+    
+            res.json(posts);
         } catch (error) {
-            res.status(500).json({ message: (error as Error).message });
+            console.error("❌ Error fetching user posts:", error);
+            res.status(500).json({ message: "Internal server error." });
         }
-    }
+    }    
 
     async updatePost(req: Request, res: Response): Promise<void> {
         try {
