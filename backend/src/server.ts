@@ -72,7 +72,7 @@ const initApp = async (): Promise<Express> => {
 
         // Static file serving
         app.use("/public/", express.static("backend/public"));
-        app.use('/uploads', express.static(path.join(__dirname, "../../uploads")));
+        app.use('/uploads', express.static(path.join(__dirname, "../uploads")));
 
         // 🔹 Use Routes
         app.use('/api/posts', postRouter);

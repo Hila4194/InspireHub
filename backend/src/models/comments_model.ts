@@ -1,26 +1,15 @@
-import mongoose from 'mongoose';
+import mongoose, { Schema, Document } from "mongoose";
 
-export interface IComment {
+export interface IComment extends Document {
     content: string;
-    sender: string;
-    postId: string;
+    sender: mongoose.Types.ObjectId; // ✅ Ensure sender is stored as an ObjectId reference
+    postId: mongoose.Types.ObjectId;
 }
 
-const CommentSchema = new mongoose.Schema<IComment>({
-    content: {
-        type: String,
-        required: true
-    }, 
-    sender: {
-        type: String,
-        required: true
-    },
-    postId: {
-        type: String,
-        required: true
-    }
+const CommentSchema = new Schema<IComment>({
+    content: { type: String, required: true },
+    sender: { type: mongoose.Schema.Types.ObjectId, ref: "User", required: true }, // ✅ Ensure sender is a reference
+    postId: { type: mongoose.Schema.Types.ObjectId, ref: "Post", required: true }
 });
 
-const commentModel = mongoose.model<IComment>('Comment', CommentSchema);
-
-export default commentModel;
+export default mongoose.model<IComment>("Comment", CommentSchema);

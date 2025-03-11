@@ -21,18 +21,24 @@ class BaseController<T> {
         }
     };
 
-    async getAll(req: Request, res: Response, filterKey: string) {
+    async getAll(req: Request, res: Response, filterKey?: string) {
         try {
             let query = {}; 
     
-            if (filterKey && req.query[filterKey]) {
-                query = { [filterKey]: req.query[filterKey] }; // Use query parameter
+            if (filterKey && req.params[filterKey]) {
+                query = { [filterKey]: req.params[filterKey] }; // ✅ Use params for filtering
             }
     
-            const items = await this.model.find(query).populate("sender", "username"); // Ensure sender's username is populated
+            const items = await this.model.find(query).populate("sender", "username");
+    
+            if (!items.length) {
+                return res.status(404).json({ message: "No posts found." });
+            }
+    
             res.json(items);
         } catch (err) {
-            res.status(500).json({ error: (err as Error).message });
+            console.error("❌ Error fetching posts:", err);
+            res.status(500).json({ error: "Internal server error" });
         }
     }    
 

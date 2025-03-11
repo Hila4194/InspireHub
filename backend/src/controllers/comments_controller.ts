@@ -36,9 +36,25 @@ class CommentsController extends BaseController<IComment> {
         super.delete(req, res);
     };
 
-    async getCommentsByPost (req: Request, res: Response) {
-        super.getAll(req, res, 'postId');
-    };
+    async getCommentsByPost(req: Request, res: Response): Promise<void> {
+        try {
+            const postId = req.params.postId;
+    
+            if (!postId) {
+                res.status(400).json({ message: "Post ID is required." });
+                return;
+            }
+    
+            const comments = await commentModel.find({ postId })
+                .populate("sender", "_id username")
+                .sort({ createdAt: 1 }); // ✅ Ensures oldest comments appear first
+    
+            res.status(200).json(comments); // ✅ Always return 200, even if empty
+        } catch (error) {
+            console.error("❌ Error fetching comments:", error);
+            res.status(500).json({ message: "Error fetching comments" });
+        }
+    }    
 };
 
 export default new CommentsController();
