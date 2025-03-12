@@ -1,12 +1,14 @@
 // Hila Ben-Nissan-312528102 | Elrom Ben-Ami-316268283
 
-import express, { Express } from 'express';
+import express, { Express, Request, Response } from 'express';
 import dotenv from 'dotenv';
 import mongoose from 'mongoose';
 import swaggerUi from 'swagger-ui-express';
 import swaggerJsdoc from 'swagger-jsdoc';
 import path from "path";
 import cors from "cors";
+import axios from "axios";
+import NodeCache from "node-cache";
 
 dotenv.config(); // Load environment variables
 
@@ -14,13 +16,50 @@ const app = express();
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-// ✅ More Robust CORS Configuration
+// ✅ Updated CORS Configuration
 app.use(cors({
-  origin: "http://localhost:5173", // ✅ Allow frontend access
-  methods: "GET, POST, PUT, DELETE, OPTIONS", // ✅ Ensure all methods are allowed
-  allowedHeaders: "Content-Type, Authorization",
-  credentials: true, // ✅ Allows cookies & auth headers
-}));
+    origin: "http://localhost:5173", // ✅ Allow frontend access
+    methods: "GET, POST, PUT, DELETE, OPTIONS",
+    allowedHeaders: "Content-Type, Authorization",
+    credentials: true
+  }));
+  
+  // ✅ Allow CORS for the ZenQuotes API
+  app.use((req, res, next) => {
+    res.header("Access-Control-Allow-Origin", "*"); // ✅ Allows all origins
+    res.header("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS");
+    res.header("Access-Control-Allow-Headers", "Content-Type, Authorization");
+    next();
+  });  
+
+// ✅ Proxy Route for Fetching Quotes
+const quoteCache = new NodeCache({ stdTTL: 3600 }); // ✅ Cache for 1 hour
+// ✅ Proxy Route for Fetching Quotes (Fixing CORS)
+app.get("/api/quote", async (req: Request, res: Response): Promise<void> => {
+    try {
+        // ✅ Check if quote is cached to prevent 429 errors
+        const cachedQuote = quoteCache.get("motivationalQuote");
+        if (cachedQuote) {
+            res.json(cachedQuote);
+            return;
+        }
+
+        // ✅ Fetch a new quote from ZenQuotes API through backend
+        const response = await axios.get("https://zenquotes.io/api/random", {
+            headers: {
+                "User-Agent": "Mozilla/5.0" // ✅ Prevents ZenQuotes from rejecting requests
+            }
+        });
+
+        const quote = response.data;
+        quoteCache.set("motivationalQuote", quote); // ✅ Store in cache for 1 hour
+
+        res.json(quote); // ✅ Send quote to frontend
+    } catch (error) {
+        console.error("❌ Error fetching quote:", error);
+        res.status(500).json({ message: "Failed to fetch motivational quote." });
+    }
+});
 
 // ✅ Ensure Preflight Requests Are Handled
 app.options("*", (req, res) => {
