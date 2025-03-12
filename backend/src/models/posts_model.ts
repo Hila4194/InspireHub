@@ -5,6 +5,7 @@ export interface IPost {
     content?: string;
     sender: mongoose.Schema.Types.ObjectId;
     imageUrl?: string;
+    likes: mongoose.Types.ObjectId[];
 }
 
 const PostSchema = new mongoose.Schema<IPost>({
@@ -12,9 +13,8 @@ const PostSchema = new mongoose.Schema<IPost>({
     content: { type: String, required: function() { return !this.imageUrl; } },
     sender: { type: mongoose.Schema.Types.ObjectId, ref: "User", required: true },
     imageUrl: { type: String, default: "" },
-    },
-    { timestamps: true }
-);
+    likes: [{ type: mongoose.Schema.Types.ObjectId, ref: "User" }]
+}, { timestamps: true });
 
 const postModel = mongoose.model<IPost>('Post', PostSchema);
 

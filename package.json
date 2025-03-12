@@ -17,6 +17,7 @@
   "author": "Hila & Elrom",
   "license": "ISC",
   "dependencies": {
+    "@google/generative-ai": "^0.24.0",
     "@types/bcrypt": "^5.0.2",
     "bcrypt": "^5.1.1",
     "bcryptjs": "^3.0.2",
@@ -29,6 +30,7 @@
     "jsonwebtoken": "^8.5.1",
     "mongoose": "^8.12.1",
     "multer": "^1.4.5-lts.1",
+    "openai": "^4.87.3",
     "swagger-jsdoc": "^6.2.8",
     "swagger-ui-express": "^5.0.1"
   },

@@ -3,6 +3,12 @@ import postModel, { IPost } from '../models/posts_model';
 import BaseController from './base_controller';
 import commentModel from '../models/comments_model';
 import { AuthenticatedRequest } from '../../types';
+import mongoose from 'mongoose';
+import { GoogleGenerativeAI } from "@google/generative-ai";
+import dotenv from "dotenv";
+dotenv.config();
+
+const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY!);
 
 class PostsController extends BaseController<IPost> {
     constructor() {
@@ -41,9 +47,23 @@ class PostsController extends BaseController<IPost> {
 
     async getPosts(req: Request, res: Response) {
         try {
-            const posts = await this.model.find().populate("sender", "username");
-            res.json(posts);
+            const userId = (req as AuthenticatedRequest).user?.id; // ✅ Get logged-in user ID (if available)
+    
+            const posts = await this.model.find()
+                .populate("sender", "username profilePicture") // ✅ Ensure profile picture is included
+                .populate("likes", "_id"); // ✅ Populate likes array to check liked status
+    
+            // ✅ Add `likedByUser` to each post
+            const postsWithLikes = posts.map(post => ({
+                ...post.toObject(),
+                likedByUser: userId ? post.likes.some((like: any) => like._id.toString() === userId) : false,
+                likes: post.likes.length // ✅ Ensure likes count is returned
+            }));
+    
+            console.log("📌 Fetched Posts:", postsWithLikes); // ✅ Debugging output
+            res.json(postsWithLikes);
         } catch (error) {
+            console.error("❌ Error fetching posts:", error);
             res.status(500).json({ message: "Error fetching posts" });
         }
     }    
@@ -54,20 +74,22 @@ class PostsController extends BaseController<IPost> {
 
     async getPostsBySender(req: Request, res: Response): Promise<void> {
         try {
-            const userId = req.params.userId || req.query.sender; // ✅ Handle both cases
-    
+            const userId = req.params.userId || req.query.sender;
+
             if (!userId) {
                 res.status(400).json({ error: "User ID is required." });
                 return;
             }
-    
-            const posts = await this.model.find({ sender: userId }).populate("sender", "username"); // ✅ Ensure username is included
-    
+
+            const posts = await this.model.find({ sender: userId })
+                .populate("sender", "username")
+                .populate("likes", "_id"); // ✅ Include likes
+
             if (!posts.length) {
                 res.status(404).json({ message: "No posts found for this user." });
                 return;
             }
-    
+
             res.json(posts);
         } catch (error) {
             console.error("❌ Error fetching user posts:", error);
@@ -80,12 +102,10 @@ class PostsController extends BaseController<IPost> {
             console.log("📌 Incoming Update Request:", req.body);
             console.log("📌 Incoming File:", req.file ? req.file.filename : "No file uploaded");
     
-            // ✅ Process Image Upload if present
             if (req.file) {
                 req.body.imageUrl = `/uploads/${req.file.filename}`;
             }
-    
-            // ✅ Ensure sender field is not modified
+
             delete req.body.sender;
     
             super.update(req, res);
@@ -99,17 +119,14 @@ class PostsController extends BaseController<IPost> {
         const { id } = req.params;
 
         try {
-            // Check if post exists
             const post = await postModel.findById(id);
             if (!post) {
                 res.status(404).json({ message: 'Post not found' });
                 return;
             }
 
-            // Delete all comments linked to the post
             await commentModel.deleteMany({ postId: id });
 
-            // Delete the post
             await post.deleteOne();
 
             res.status(200).json({ message: 'Post and associated comments deleted successfully' });
@@ -117,6 +134,77 @@ class PostsController extends BaseController<IPost> {
             res.status(500).json({ error: (err as Error).message });
         }
     };
+
+    // Function: Toggle Like/Unlike
+    async toggleLikePost(req: AuthenticatedRequest, res: Response): Promise<void> {
+        try {
+            const { postId } = req.params;
+            const userId = req.user?.id;
+    
+            if (!userId) {
+                res.status(401).json({ message: "Unauthorized: User not logged in." });
+                return;
+            }
+    
+            const post = await postModel.findById(postId);
+            if (!post) {
+                res.status(404).json({ message: "Post not found" });
+                return;
+            }
+    
+            const userObjectId = new mongoose.Types.ObjectId(userId);
+    
+            // ✅ Check if the user has already liked the post
+            const likedIndex = post.likes.findIndex((id) => id.toString() === userObjectId.toString());
+    
+            if (likedIndex === -1) {
+                post.likes.push(userObjectId); // ✅ Like the post
+            } else {
+                post.likes.splice(likedIndex, 1); // ✅ Unlike the post
+            }
+    
+            await post.save();
+            res.status(200).json({ likes: post.likes.length, liked: likedIndex === -1 });
+        } catch (error) {
+            console.error("❌ Error toggling like:", error);
+            res.status(500).json({ message: "Internal server error." });
+        }
+    }
+
+    async getPostSuggestions(req: Request, res: Response): Promise<void> {
+        console.log("🔹 Function `getPostSuggestions` was called!");
+    
+        try {
+            const { userInput } = req.body;
+            if (!userInput) {
+                console.log("❌ Missing input text.");
+                res.status(400).json({ message: "Input text is required." });
+                return;
+            }
+    
+            const prompt = `Suggest 3 engaging post ideas based on this topic: "${userInput}".`;
+    
+            console.log("📤 Sending request to Gemini with prompt:", prompt);
+    
+            const model = genAI.getGenerativeModel({ model: "gemini-1.5-pro" });
+    
+            const result = await model.generateContent(prompt);
+            const response = await result.response;
+            const text = response.text();
+    
+            const suggestions = text.split("\n").map(line => line.trim()).filter(line => line.length > 0);
+    
+            console.log("✅ Gemini AI Suggestions:", suggestions);
+            res.json({ suggestions });
+        } catch (error: any) {
+            console.error("❌ Error generating AI post suggestions:", error);
+    
+            res.status(500).json({
+                message: "Failed to generate post suggestions using Gemini.",
+                error: error.message,
+            });
+        }
+    }
 };
 
 export default new PostsController();
