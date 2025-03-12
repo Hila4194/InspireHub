@@ -238,4 +238,46 @@ router.put("/:id", authMiddleware, upload.single("file"), postController.updateP
  */
 router.delete('/:id', authMiddleware, postController.deletePost.bind(postController));
 
+
+/**
+ * @swagger
+ * /api/posts/{postId}/like:
+ *   put:
+ *     summary: Like or Unlike a post
+ *     tags: 
+ *       - Posts
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: postId
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: The ID of the post to like or unlike
+ *     responses:
+ *       200:
+ *         description: Like toggled successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 likes:
+ *                   type: number
+ *                   description: The total number of likes
+ *                 liked:
+ *                   type: boolean
+ *                   description: Whether the user liked the post
+ *       401:
+ *         description: Unauthorized
+ *       404:
+ *         description: Post not found
+ *       500:
+ *         description: Internal server error
+ */
+router.put("/:postId/like", authMiddleware, postController.toggleLikePost.bind(postController));
+
+router.post('/suggestions', postController.getPostSuggestions.bind(postController));
+
 export default router;
