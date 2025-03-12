@@ -47,20 +47,19 @@ class PostsController extends BaseController<IPost> {
 
     async getPosts(req: Request, res: Response) {
         try {
-            const userId = (req as AuthenticatedRequest).user?.id; // ✅ Get logged-in user ID (if available)
+            const userId = (req as AuthenticatedRequest).user?.id;
     
             const posts = await this.model.find()
-                .populate("sender", "username profilePicture") // ✅ Ensure profile picture is included
-                .populate("likes", "_id"); // ✅ Populate likes array to check liked status
+                .populate("sender", "username profilePicture")
+                .populate("likes", "_id"); // ✅ Ensure likes are populated
     
-            // ✅ Add `likedByUser` to each post
+            // ✅ Convert likes array into count
             const postsWithLikes = posts.map(post => ({
                 ...post.toObject(),
-                likedByUser: userId ? post.likes.some((like: any) => like._id.toString() === userId) : false,
-                likes: post.likes.length // ✅ Ensure likes count is returned
+                likes: post.likes.length, // ✅ Convert likes array into number
+                likedByUser: userId ? post.likes.some((like: any) => like._id.toString() === userId) : false
             }));
     
-            console.log("📌 Fetched Posts:", postsWithLikes); // ✅ Debugging output
             res.json(postsWithLikes);
         } catch (error) {
             console.error("❌ Error fetching posts:", error);
@@ -169,7 +168,7 @@ class PostsController extends BaseController<IPost> {
             console.error("❌ Error toggling like:", error);
             res.status(500).json({ message: "Internal server error." });
         }
-    }
+    }    
 
     async getPostSuggestions(req: Request, res: Response): Promise<void> {
         console.log("🔹 Function `getPostSuggestions` was called!");
