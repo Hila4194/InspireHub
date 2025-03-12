@@ -83,6 +83,7 @@ const generateTokens = (
 
 const login = async (req: Request, res: Response): Promise<void> => {
   const { username, password } = req.body;
+
   if (!username || !password) {
     res.status(400).json({ message: "Username and password are required" });
     return;
@@ -113,19 +114,33 @@ const login = async (req: Request, res: Response): Promise<void> => {
     user.refreshTokens.push(refreshToken);
     await user.save();
 
-    const profilePictureUrl = `${process.env.API_BASE_URL}${user.profilePicture}`;
+    // ✅ Fix: Ensure API_BASE_URL is correctly formatted
+    const apiBaseUrl = process.env.DOMAIN_BASE?.trim().replace(/\/$/, ""); // Removes trailing slash if exists
+
+    // ✅ Fix: Ensure profilePicture URL is correctly structured
+    let profilePictureUrl = "/default-avatar.png"; // Default image if none exists
+
+    if (user.profilePicture) {
+      if (user.profilePicture.startsWith("/uploads/")) {
+        profilePictureUrl = `${apiBaseUrl}${user.profilePicture}`; // ✅ Correct full path
+      } else {
+        profilePictureUrl = user.profilePicture; // ✅ Keep external images as they are
+      }
+    }
+
+    console.log("✅ Debug: Sending Profile Picture URL:", profilePictureUrl);
 
     res.status(200).json({
       username: user.username,
       email: user.email,
       _id: user._id,
-      profilePicture: profilePictureUrl,
+      profilePicture: profilePictureUrl, // ✅ Correctly formatted image URL
       accessToken,
       refreshToken,
     });
     return;
   } catch (error) {
-    console.error(error);
+    console.error("❌ Error logging in:", error);
     res.status(500).json({ message: "Error logging in" });
     return;
   }

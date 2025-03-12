@@ -53,12 +53,19 @@ class PostsController extends BaseController<IPost> {
                 .populate("sender", "username profilePicture")
                 .populate("likes", "_id"); // ✅ Ensure likes are populated
     
-            // ✅ Convert likes array into count
+            const apiBaseUrl = process.env.DOMAIN_BASE?.trim().replace(/\/$/, ""); // ✅ Remove trailing `/`
+    
+            // ✅ Convert likes array into count and format image URLs
             const postsWithLikes = posts.map(post => ({
                 ...post.toObject(),
                 likes: post.likes.length, // ✅ Convert likes array into number
-                likedByUser: userId ? post.likes.some((like: any) => like._id.toString() === userId) : false
+                likedByUser: userId ? post.likes.some((like: any) => like._id.toString() === userId) : false,
+                imageUrl: post.imageUrl?.startsWith("/uploads/")
+                    ? `${apiBaseUrl}${post.imageUrl}` // ✅ Ensure correct image URL
+                    : post.imageUrl,
             }));
+    
+            console.log("✅ Debug: Sending Posts with Correct Image URLs", postsWithLikes);
     
             res.json(postsWithLikes);
         } catch (error) {
