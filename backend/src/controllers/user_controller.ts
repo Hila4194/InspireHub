@@ -29,11 +29,8 @@ const updateProfile = async (req: Request, res: Response): Promise<void> => {
             return;
         }
 
-        const profilePictureUrl = updatedUser.profilePicture && updatedUser.profilePicture.startsWith("/uploads/")
-            ? `${process.env.API_BASE_URL}${updatedUser.profilePicture}`
-            : updatedUser?.profilePicture;
-
-        res.json({ ...updatedUser.toObject(), profilePicture: profilePictureUrl });
+        console.log("✅ Updated User:", updatedUser);
+        res.json(updatedUser);
     } catch (error) {
         console.error("❌ Error updating profile:", error);
         res.status(500).json({ message: "Failed to update profile" });
