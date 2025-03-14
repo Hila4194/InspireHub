@@ -5,31 +5,29 @@ import userModel from "../models/user_model";
 const updateProfile = async (req: Request, res: Response): Promise<void> => {
     try {
         const userId = req.params.id;
-        const { username, email } = req.body;
-        let profilePicture = undefined;
+        const { username } = req.body;
+        let profilePicture: string | undefined;
 
-        console.log("📌 Incoming Profile Update:", req.body);
-        console.log("📌 Incoming File:", req.file ? req.file.filename : "No file uploaded");
-
-        // ✅ If a new profile picture is uploaded, store the correct file path
         if (req.file) {
             profilePicture = `/uploads/${req.file.filename}`;
         }
 
-        // ✅ Update user details in MongoDB
-        const updatedUser = await userModel.findByIdAndUpdate(
-            userId,
-            { username, email, ...(profilePicture && { profilePicture }) }, // Only update profilePicture if provided
-            { new: true }
-        );
+        const updateFields: { username?: string; profilePicture?: string } = {};
+        if (username) updateFields.username = username;
+        if (profilePicture) updateFields.profilePicture = profilePicture;
+
+        const updatedUser = await userModel.findByIdAndUpdate(userId, updateFields, { new: true });
 
         if (!updatedUser) {
-            console.error("❌ User not found:", userId);
             res.status(404).json({ message: "User not found" });
             return;
         }
 
-        console.log("✅ Updated User:", updatedUser);
+        // ✅ Ensure absolute profile picture URL
+        updatedUser.profilePicture = updatedUser.profilePicture
+            ? `${process.env.DOMAIN_BASE}${updatedUser.profilePicture}`
+            : undefined;
+
         res.json(updatedUser);
     } catch (error) {
         console.error("❌ Error updating profile:", error);
