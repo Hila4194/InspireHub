@@ -169,12 +169,6 @@ router.get('/:id', commentController.getCommentById.bind(commentController));
  *               content:
  *                 type: string
  *                 description: The content of the comment
- *               sender:
- *                 type: string
- *                 description: The user ID who wrote the comment
- *               postId:
- *                 type: string
- *                 description: The ID of the post this comment belongs to
  *     responses:
  *       200:
  *         description: Comment updated successfully
@@ -190,8 +184,14 @@ router.get('/:id', commentController.getCommentById.bind(commentController));
  *                   type: string
  *                   description: The content of the comment
  *                 sender:
- *                   type: string
- *                   description: The user who wrote the comment
+ *                   type: object
+ *                   properties:
+ *                     _id:
+ *                       type: string
+ *                       description: The user ID
+ *                     username:
+ *                       type: string
+ *                       description: Username of the commenter
  *                 postId:
  *                   type: string
  *                   description: The ID of the post this comment belongs to
@@ -250,10 +250,26 @@ router.delete('/:id', authMiddleware, commentController.deleteComment.bind(comme
  *             schema:
  *               type: array
  *               items:
- *                 $ref: '#/components/schemas/Comment'
+ *                 type: object
+ *                 properties:
+ *                   _id:
+ *                     type: string
+ *                     description: The comment ID
+ *                   content:
+ *                     type: string
+ *                     description: The content of the comment
+ *                   sender:
+ *                     type: object
+ *                     properties:
+ *                       _id:
+ *                         type: string
+ *                         description: The user ID
+ *                       username:
+ *                         type: string
+ *                         description: Username of the commenter
  *       500:
  *         description: Internal server error
  */
-router.get("/post/:postId", authMiddleware, commentController.getCommentsByPost.bind(commentController));
+router.get("/post/:postId", commentController.getCommentsByPost.bind(commentController));
 
 export default router;

@@ -35,7 +35,8 @@ class PostsController extends BaseController<IPost> {
                 title,
                 content: content || undefined,
                 sender: senderId,
-                imageUrl
+                imageUrl,
+                comments: []
             });
     
             res.status(201).json(post);
@@ -48,26 +49,45 @@ class PostsController extends BaseController<IPost> {
     async getPosts(req: Request, res: Response) {
         try {
             const userId = (req as AuthenticatedRequest).user?.id;
-    
+            const limit = parseInt(req.query.limit as string) || 4;  // ✅ Default limit is 4
+            const skip = parseInt(req.query.skip as string) || 0;  // ✅ Offset for pagination
+            
             const posts = await this.model.find()
-                .populate("sender", "username profilePicture")
-                .populate("likes", "_id"); // ✅ Ensure likes are populated
+                .populate("sender", "username profilePicture") // ✅ Ensure sender's profile picture is populated
+                .populate("likes", "_id")
+                .populate({
+                    path: "comments",
+                    populate: { path: "sender", select: "username" }
+                })
+                .sort({ createdAt: -1 }) // ✅ Ensure newest posts appear first
+                .skip(skip)
+                .limit(limit); // ✅ Pagination applied here
     
             const apiBaseUrl = process.env.DOMAIN_BASE?.trim().replace(/\/$/, ""); // ✅ Remove trailing `/`
     
-            // ✅ Convert likes array into count and format image URLs
-            const postsWithLikes = posts.map(post => ({
-                ...post.toObject(),
-                likes: post.likes.length, // ✅ Convert likes array into number
-                likedByUser: userId ? post.likes.some((like: any) => like._id.toString() === userId) : false,
-                imageUrl: post.imageUrl?.startsWith("/uploads/")
-                    ? `${apiBaseUrl}${post.imageUrl}` // ✅ Ensure correct image URL
-                    : post.imageUrl,
-            }));
+            // ✅ Convert likes array into count and format image & profile picture URLs
+            const formattedPosts = posts.map(post => {
+                const sender = post.sender && typeof post.sender !== 'string' ? post.sender as unknown as { username: string; profilePicture?: string } : undefined;
+                
+                return {
+                    ...post.toObject(),
+                    likes: post.likes.length, // ✅ Convert likes array into number
+                    likedByUser: userId ? post.likes.some((like: any) => like._id.toString() === userId) : false,
+                    imageUrl: post.imageUrl?.startsWith("/uploads/") 
+                        ? `${apiBaseUrl}${post.imageUrl}` // ✅ Ensure correct image URL
+                        : post.imageUrl,
+                    sender: {
+                        username: sender?.username || "Unknown User", // ✅ Ensure username exists
+                        profilePicture: sender?.profilePicture && sender.profilePicture.startsWith("/uploads/")
+                            ? `${apiBaseUrl}${sender.profilePicture}`
+                            : sender?.profilePicture || "../../uploads/avatar.png" // ✅ Default profile picture
+                    }
+                };
+            });
     
-            console.log("✅ Debug: Sending Posts with Correct Image URLs", postsWithLikes);
+            console.log("✅ Debug: Sending Posts with User Profile Pictures", formattedPosts);
     
-            res.json(postsWithLikes);
+            res.json(formattedPosts);
         } catch (error) {
             console.error("❌ Error fetching posts:", error);
             res.status(500).json({ message: "Error fetching posts" });
@@ -89,7 +109,11 @@ class PostsController extends BaseController<IPost> {
 
             const posts = await this.model.find({ sender: userId })
                 .populate("sender", "username")
-                .populate("likes", "_id"); // ✅ Include likes
+                .populate("likes", "_id") // ✅ Include likes
+                .populate({
+                    path: "comments",
+                    populate: { path: "sender", select: "username" } // ✅ Populate comments
+                });
 
             if (!posts.length) {
                 res.status(404).json({ message: "No posts found for this user." });
