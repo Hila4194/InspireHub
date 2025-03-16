@@ -26,7 +26,7 @@ class CommentsController extends BaseController<IComment> {
 
             const newComment = await commentModel.create({ content, sender: senderId, postId });
 
-            // ✅ Increment comments count on the post
+            // Increment comments count on the post
             await postModel.findByIdAndUpdate(postId, { $push: { comments: newComment._id } });
 
             res.status(201).json(newComment);
@@ -52,7 +52,7 @@ class CommentsController extends BaseController<IComment> {
                 return;
             }
 
-            // ✅ Ensure only the owner can edit
+            // Ensure only the owner can edit
             if (comment.sender.toString() !== userId) {
                 res.status(403).json({ message: "Unauthorized to edit this comment." });
                 return;
@@ -79,7 +79,7 @@ class CommentsController extends BaseController<IComment> {
                 return;
             }
 
-            // ✅ Ensure only the owner can delete
+            // Ensure only the owner can delete
             if (comment.sender.toString() !== userId) {
                 res.status(403).json({ message: "Unauthorized to delete this comment." });
                 return;
@@ -87,7 +87,7 @@ class CommentsController extends BaseController<IComment> {
 
             await comment.deleteOne();
 
-            // ✅ Remove comment reference from the post
+            // Remove comment reference from the post
             await postModel.findByIdAndUpdate(comment.postId, { $pull: { comments: commentId } });
 
             res.status(200).json({ message: "Comment deleted successfully" });
@@ -108,9 +108,9 @@ class CommentsController extends BaseController<IComment> {
 
             const comments = await commentModel.find({ postId })
                 .populate("sender", "_id username")
-                .sort({ createdAt: 1 }); // ✅ Ensures oldest comments appear first
+                .sort({ createdAt: 1 }); // Ensures oldest comments appear first
 
-            res.status(200).json(comments); // ✅ Always return 200, even if empty
+            res.status(200).json(comments);
         } catch (error) {
             console.error("❌ Error fetching comments:", error);
             res.status(500).json({ message: "Error fetching comments" });

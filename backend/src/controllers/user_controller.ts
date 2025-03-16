@@ -1,7 +1,7 @@
 import { Request, Response } from "express";
 import userModel from "../models/user_model";
 
-// ✅ Update Profile Function
+// Update Profile Function
 const updateProfile = async (req: Request, res: Response): Promise<void> => {
     try {
         const userId = req.params.id;
@@ -23,7 +23,6 @@ const updateProfile = async (req: Request, res: Response): Promise<void> => {
             return;
         }
 
-        // ✅ Ensure absolute profile picture URL
         updatedUser.profilePicture = updatedUser.profilePicture
             ? `${process.env.DOMAIN_BASE}${updatedUser.profilePicture}`
             : undefined;

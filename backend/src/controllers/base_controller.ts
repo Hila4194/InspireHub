@@ -26,7 +26,7 @@ class BaseController<T> {
             let query = {}; 
     
             if (filterKey && req.params[filterKey]) {
-                query = { [filterKey]: req.params[filterKey] }; // ✅ Use params for filtering
+                query = { [filterKey]: req.params[filterKey] };
             }
     
             const items = await this.model.find(query).populate("sender", "username");
