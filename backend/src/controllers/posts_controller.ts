@@ -49,38 +49,38 @@ class PostsController extends BaseController<IPost> {
     async getPosts(req: Request, res: Response) {
         try {
             const userId = (req as AuthenticatedRequest).user?.id;
-            const limit = parseInt(req.query.limit as string) || 4;  // ✅ Default limit is 4
-            const skip = parseInt(req.query.skip as string) || 0;  // ✅ Offset for pagination
+            const limit = parseInt(req.query.limit as string) || 4;  // Default limit is 4
+            const skip = parseInt(req.query.skip as string) || 0;  // Offset for pagination
             
             const posts = await this.model.find()
-                .populate("sender", "username profilePicture") // ✅ Ensure sender's profile picture is populated
+                .populate("sender", "username profilePicture")
                 .populate("likes", "_id")
                 .populate({
                     path: "comments",
                     populate: { path: "sender", select: "username" }
                 })
-                .sort({ createdAt: -1 }) // ✅ Ensure newest posts appear first
+                .sort({ createdAt: -1 }) // Ensure newest posts appear first
                 .skip(skip)
-                .limit(limit); // ✅ Pagination applied here
+                .limit(limit); // Pagination applied here
     
-            const apiBaseUrl = process.env.DOMAIN_BASE?.trim().replace(/\/$/, ""); // ✅ Remove trailing `/`
+            const apiBaseUrl = process.env.DOMAIN_BASE?.trim().replace(/\/$/, "");
     
-            // ✅ Convert likes array into count and format image & profile picture URLs
+            // Convert likes array into count and format image & profile picture URLs
             const formattedPosts = posts.map(post => {
                 const sender = post.sender && typeof post.sender !== 'string' ? post.sender as unknown as { username: string; profilePicture?: string } : undefined;
                 
                 return {
                     ...post.toObject(),
-                    likes: post.likes.length, // ✅ Convert likes array into number
+                    likes: post.likes.length, // Convert likes array into number
                     likedByUser: userId ? post.likes.some((like: any) => like._id.toString() === userId) : false,
                     imageUrl: post.imageUrl?.startsWith("/uploads/") 
-                        ? `${apiBaseUrl}${post.imageUrl}` // ✅ Ensure correct image URL
+                        ? `${apiBaseUrl}${post.imageUrl}`
                         : post.imageUrl,
                     sender: {
-                        username: sender?.username || "Unknown User", // ✅ Ensure username exists
+                        username: sender?.username || "Unknown User", // Ensure username exists
                         profilePicture: sender?.profilePicture && sender.profilePicture.startsWith("/uploads/")
                             ? `${apiBaseUrl}${sender.profilePicture}`
-                            : sender?.profilePicture || "../../uploads/avatar.png" // ✅ Default profile picture
+                            : sender?.profilePicture || "../../uploads/avatar.png" // Default profile picture
                     }
                 };
             });
@@ -109,10 +109,10 @@ class PostsController extends BaseController<IPost> {
 
             const posts = await this.model.find({ sender: userId })
                 .populate("sender", "username")
-                .populate("likes", "_id") // ✅ Include likes
+                .populate("likes", "_id")
                 .populate({
                     path: "comments",
-                    populate: { path: "sender", select: "username" } // ✅ Populate comments
+                    populate: { path: "sender", select: "username" }
                 });
 
             if (!posts.length) {
@@ -165,7 +165,7 @@ class PostsController extends BaseController<IPost> {
         }
     };
 
-    // Function: Toggle Like/Unlike
+    // Toggle Like/Unlike
     async toggleLikePost(req: AuthenticatedRequest, res: Response): Promise<void> {
         try {
             const { postId } = req.params;
@@ -184,13 +184,13 @@ class PostsController extends BaseController<IPost> {
     
             const userObjectId = new mongoose.Types.ObjectId(userId);
     
-            // ✅ Check if the user has already liked the post
+            // Check if the user has already liked the post
             const likedIndex = post.likes.findIndex((id) => id.toString() === userObjectId.toString());
     
             if (likedIndex === -1) {
-                post.likes.push(userObjectId); // ✅ Like the post
+                post.likes.push(userObjectId); // Like the post
             } else {
-                post.likes.splice(likedIndex, 1); // ✅ Unlike the post
+                post.likes.splice(likedIndex, 1); // Unlike the post
             }
     
             await post.save();

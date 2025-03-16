@@ -110,11 +110,8 @@ const router = express.Router();
  *       500:
  *         description: Internal server error
  */
-router.post(
-  "/register",
-  upload.single("profilePicture"),
-  authController.register
-);
+router.post("/register",upload.single("profilePicture"),authController.register);
+
 router.post("/google", authController.googleSignin);
 
 /**
@@ -206,12 +203,7 @@ router.post("/refresh", authController.refresh);
  */
 router.post("/logout", authController.logout);
 
-// ✅ Update Profile Route (User must be logged in)
-router.put(
-  "/update-profile/:id",
-  authMiddleware,
-  upload.single("profilePicture"),
-  userController.updateProfile
-);
+// Update Profile Route (User must be logged in)
+router.put("/update-profile/:id",authMiddleware,upload.single("profilePicture"),userController.updateProfile);
 
 export default router;

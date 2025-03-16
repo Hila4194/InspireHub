@@ -114,17 +114,15 @@ const login = async (req: Request, res: Response): Promise<void> => {
     user.refreshTokens.push(refreshToken);
     await user.save();
 
-    // ✅ Fix: Ensure API_BASE_URL is correctly formatted
-    const apiBaseUrl = process.env.DOMAIN_BASE?.trim().replace(/\/$/, ""); // Removes trailing slash if exists
+    const apiBaseUrl = process.env.DOMAIN_BASE?.trim().replace(/\/$/, "");
 
-    // ✅ Fix: Ensure profilePicture URL is correctly structured
-    let profilePictureUrl = "/default-avatar.png"; // Default image if none exists
+    let profilePictureUrl = "/default-avatar.png";
 
     if (user.profilePicture) {
       if (user.profilePicture.startsWith("/uploads/")) {
-        profilePictureUrl = `${apiBaseUrl}${user.profilePicture}`; // ✅ Correct full path
+        profilePictureUrl = `${apiBaseUrl}${user.profilePicture}`;
       } else {
-        profilePictureUrl = user.profilePicture; // ✅ Keep external images as they are
+        profilePictureUrl = user.profilePicture;
       }
     }
 
@@ -134,7 +132,7 @@ const login = async (req: Request, res: Response): Promise<void> => {
       username: user.username,
       email: user.email,
       _id: user._id,
-      profilePicture: profilePictureUrl, // ✅ Correctly formatted image URL
+      profilePicture: profilePictureUrl,
       accessToken,
       refreshToken,
     });
@@ -147,7 +145,6 @@ const login = async (req: Request, res: Response): Promise<void> => {
 };
 
 const refresh = async (req: Request, res: Response) => {
-  // validate refresh token
   const { refreshToken } = req.body;
   console.log("refreshToken:", refreshToken);
   if (!refreshToken) {
@@ -158,7 +155,6 @@ const refresh = async (req: Request, res: Response) => {
     res.status(400).send("Token secret not set");
     return;
   }
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   jwt.verify(
     refreshToken,
     process.env.TOKEN_SECRET,
@@ -223,7 +219,6 @@ const logout = async (req: Request, res: Response) => {
   }
 
   // Find user by refresh token
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   jwt.verify(
     refreshToken,
     process.env.TOKEN_SECRET as string,
@@ -262,40 +257,33 @@ const logout = async (req: Request, res: Response) => {
   );
 };
 
-export const authMiddleware = (
-  req: AuthenticatedRequest,
-  res: Response,
-  next: NextFunction
-): void => { // ✅ Explicitly set return type to `void`
+export const authMiddleware = (req: AuthenticatedRequest,res: Response,next: NextFunction): void => {
   const authHeader = req.headers.authorization;
   const token = authHeader && authHeader.split(" ")[1];
 
   if (!token) {
     res.status(401).json({ message: "Access denied" });
-    return; // ✅ Ensure function exits after sending response
+    return;
   }
 
   if (!process.env.TOKEN_SECRET) {
     res.status(500).json({ message: "Server error: Token secret not set" });
-    return; // ✅ Ensure function exits after sending response
+    return;
   }
 
   jwt.verify(token, process.env.TOKEN_SECRET, (err, payload) => {
     if (err) {
       res.status(403).json({ message: "Invalid token" });
-      return; // ✅ Ensure function exits after sending response
+      return;
     }
 
-    req.user = { id: (payload as { _id: string })._id }; // ✅ Attach user to req.user
+    req.user = { id: (payload as { _id: string })._id };
     next();
   });
 };
 
 const client = new OAuth2Client();
-export const googleSignin = async (
-  req: Request,
-  res: Response
-): Promise<void> => {
+export const googleSignin = async (req: Request,res: Response): Promise<void> => {
   try {
     const ticket = await client.verifyIdToken({
       idToken: req.body.credential,
@@ -319,10 +307,10 @@ export const googleSignin = async (
       // ✅ Generate a valid username (letters + digits)
       const safeName = (payload.name || "User").replace(/\s+/g, "");
       const randomDigits = Math.floor(Math.random() * 1000);
-      const username = safeName + randomDigits; // Example: "JohnDoe123"
+      const username = safeName + randomDigits;
 
       user = await userModel.create({
-        username, // ✅ Fixes missing username issue
+        username,
         email,
         password: "", // No password needed for Google users
         profilePicture: payload.picture,

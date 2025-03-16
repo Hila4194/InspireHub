@@ -2,26 +2,26 @@ import express from "express";
 import multer from "multer";
 import path from "path";
 import fs from "fs";
-import { authMiddleware } from "../controllers/auth_controller"; // ✅ Ensure authentication before upload
+import { authMiddleware } from "../controllers/auth_controller";
 
 const router = express.Router();
 
-// ✅ Ensure the uploads directory exists
+// Ensure the uploads directory exists
 const uploadDir = path.join(__dirname, "../../uploads");
 if (!fs.existsSync(uploadDir)) {
     fs.mkdirSync(uploadDir, { recursive: true });
 }
 
-// ✅ Configure Multer Storage with Fixed Filenames
+// Configure Multer Storage with Fixed Filenames
 const storage = multer.diskStorage({
     destination: uploadDir,
     filename: (req, file, cb) => {
-        const safeFilename = file.originalname.replace(/[^a-zA-Z0-9.]/g, "_"); // ✅ Remove special characters
-        cb(null, safeFilename); // ✅ Keep original filename (sanitized)
+        const safeFilename = file.originalname.replace(/[^a-zA-Z0-9.]/g, "_");
+        cb(null, safeFilename);
     }
 });
 
-// ✅ Filter only images
+// Filter only images
 const fileFilter = (req: Express.Request, file: Express.Multer.File, cb: multer.FileFilterCallback) => {
     const allowedTypes = ["image/jpeg", "image/png", "image/jpg"];
     if (allowedTypes.includes(file.mimetype)) {
@@ -34,7 +34,7 @@ const fileFilter = (req: Express.Request, file: Express.Multer.File, cb: multer.
 const upload = multer({
     storage,
     fileFilter,
-    limits: { fileSize: 5 * 1024 * 1024 }, // ✅ Limit to 5MB
+    limits: { fileSize: 5 * 1024 * 1024 }, // Limit to 5MB
 });
 
 /**
@@ -71,7 +71,7 @@ router.post("/profile-picture", authMiddleware, upload.single("file"), async (re
             return;
         }
 
-        const imageUrl = `/uploads/${req.file.filename}`; // ✅ Ensure filename matches saved file
+        const imageUrl = `/uploads/${req.file.filename}`;
 
         console.log("✅ Profile picture uploaded:", imageUrl);
 
@@ -87,7 +87,7 @@ router.post("/post-image", authMiddleware, upload.single("file"), async (req, re
             res.status(400).json({ message: "No file uploaded or invalid file type" });
             return;
         }
-        const imageUrl = `/uploads/${req.file.filename}`; // ✅ Correct Image URL
+        const imageUrl = `/uploads/${req.file.filename}`;
         console.log("✅ Post image uploaded:", imageUrl);
         res.json({ url: imageUrl });
     } catch (error) {

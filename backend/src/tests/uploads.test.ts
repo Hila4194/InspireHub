@@ -12,7 +12,7 @@ beforeAll(async () => {
 });
 
 afterAll(async () => {
-    await mongoose.disconnect();
+    await mongoose.disconnect(); // Close MongoDB connection after tests
 });
 
 describe("Uploads Tests", () => {
@@ -43,7 +43,7 @@ describe("Uploads Tests", () => {
             console.log("✅ Uploaded image URL:", response.body.user.profilePicture);
 
             const uploadedImageUrl = response.body.user.profilePicture;
-            const imageUrlPath = uploadedImageUrl.replace(/^.*\/\/[^/]+/, ""); // Extract relative path
+            const imageUrlPath = uploadedImageUrl.replace(/^.*\/\/[^/]+/, "");
 
             // Ensure uploaded image is accessible
             const res = await request(app).get(imageUrlPath);

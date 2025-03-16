@@ -10,13 +10,14 @@ import cors from "cors";
 import axios from "axios";
 import NodeCache from "node-cache";
 
-dotenv.config(); // Load environment variables
+// Load environment variables
+dotenv.config();
 
 const app = express();
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-// ✅ Updated CORS Configuration
+// CORS Configuration
 app.use(cors({
     origin: "http://localhost:5173", // ✅ Allow frontend access
     methods: "GET, POST, PUT, DELETE, OPTIONS",
@@ -24,7 +25,7 @@ app.use(cors({
     credentials: true
   }));
   
-  // ✅ Allow CORS for the ZenQuotes API
+  // Allow CORS for the ZenQuotes API
   app.use((req, res, next) => {
     res.header("Access-Control-Allow-Origin", "*"); // ✅ Allows all origins
     res.header("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS");
@@ -32,9 +33,8 @@ app.use(cors({
     next();
   });  
 
-// ✅ Proxy Route for Fetching Quotes
+// Proxy Route for Fetching Quotes
 const quoteCache = new NodeCache({ stdTTL: 3600 }); // ✅ Cache for 1 hour
-// ✅ Proxy Route for Fetching Quotes (Fixing CORS)
 app.get("/api/quote", async (req: Request, res: Response): Promise<void> => {
     try {
         // ✅ Check if quote is cached to prevent 429 errors
@@ -61,7 +61,7 @@ app.get("/api/quote", async (req: Request, res: Response): Promise<void> => {
     }
 });
 
-// ✅ Ensure Preflight Requests Are Handled
+// Ensure Preflight Requests Are Handled
 app.options("*", (req, res) => {
   res.header("Access-Control-Allow-Origin", "http://localhost:5173");
   res.header("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS");
