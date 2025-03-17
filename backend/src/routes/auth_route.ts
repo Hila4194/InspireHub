@@ -203,7 +203,69 @@ router.post("/refresh", authController.refresh);
  */
 router.post("/logout", authController.logout);
 
-// Update Profile Route (User must be logged in)
-router.put("/update-profile/:id",authMiddleware,upload.single("profilePicture"),userController.updateProfile);
+/**
+ * @swagger
+ * /api/auth/update-profile/{id}:
+ *   put:
+ *     summary: Update user's profile
+ *     description: Updates a user's profile by allowing them to change their username and upload a new profile picture.
+ *     tags: 
+ *       - Auth
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: The ID of the user whose profile is being updated
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         multipart/form-data:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               username:
+ *                 type: string
+ *                 description: The updated username of the user
+ *               profilePicture:
+ *                 type: string
+ *                 format: binary
+ *                 description: The new profile picture file (optional)
+ *     responses:
+ *       200:
+ *         description: Profile updated successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: Profile updated successfully
+ *                 user:
+ *                   type: object
+ *                   properties:
+ *                     id:
+ *                       type: string
+ *                       description: The user's ID
+ *                     username:
+ *                       type: string
+ *                       description: The updated username
+ *                     profilePictureUrl:
+ *                       type: string
+ *                       description: The URL of the updated profile picture
+ *       400:
+ *         description: Invalid request data
+ *       401:
+ *         description: Unauthorized - User not authenticated
+ *       404:
+ *         description: User not found
+ *       500:
+ *         description: Internal server error
+ */
+router.put("/update-profile/:id", authMiddleware, upload.single("profilePicture"), userController.updateProfile);
 
 export default router;

@@ -3,4 +3,5 @@ export default {
   preset: "ts-jest",
   testEnvironment: "node",
   roots: ["<rootDir>/backend/src/"],
+  watch: false,
 };
