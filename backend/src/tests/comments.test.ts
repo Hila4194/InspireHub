@@ -148,30 +148,30 @@ describe("Update Comment", () => {
                 postId: postId,
             });
         expect(res.statusCode).toEqual(404);
-        expect(res.body).toHaveProperty("message", "not found");
+        expect(res.body).toHaveProperty("message", "Comment not found");
     });
 
     test("should return 500 if there is a server error", async () => {
-        jest.spyOn(commentModel, 'findById').mockImplementationOnce(() => {
-            throw new Error("Database error");
-        });
+      jest.spyOn(commentModel, 'findById').mockImplementationOnce(() => {
+          throw new Error("Database error");
+      });
 
-        const res = await request(app)
-            .put(`/api/comments/${commentId}`)
-            .set({
-                authorization: "JWT " +  testUser.accessToken,
-            })
-            .send({
-                content: "Updated content",
-                sender: testUser._id,
-                postId: postId,
-            });
-        expect(res.statusCode).toEqual(500);
-        expect(res.body).toHaveProperty("error", "Database error");
+      const res = await request(app)
+          .put(`/api/comments/${commentId}`)
+          .set({
+              authorization: "JWT " +  testUser.accessToken,
+          })
+          .send({
+              content: "Updated content",
+              sender: testUser._id,
+              postId: postId,
+          });
 
-        // Restore the original implementation
-        jest.restoreAllMocks();
-    });
+      expect(res.statusCode).toEqual(500);
+      expect(res.body).toHaveProperty("message", "Failed to update comment");
+
+      jest.restoreAllMocks();
+  });
 });
 
 describe("Get Comments by Post ID", () => {
@@ -233,7 +233,7 @@ describe("Delete Comment", () => {
         });
   
       expect(res.statusCode).toEqual(200);
-      expect(res.body).toHaveProperty("message", "deleted");
+      expect(res.body).toHaveProperty("message", "Comment deleted successfully");
   
       // Verify the comment no longer exists
       const res2 = await request(app).get(`/api/comments/${commentId}`);
@@ -249,7 +249,7 @@ describe("Delete Comment", () => {
         });
   
       expect(res.statusCode).toEqual(404);
-      expect(res.body).toHaveProperty("message", "not found");
+      expect(res.body).toHaveProperty("message", "Comment not found");
     });
   });
   
