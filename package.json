@@ -6,9 +6,11 @@
   "scripts": {
     "start": "copy .env_dev .env && tsc && node ./dist/app.js",
     "dev": "copy .env_dev .env && nodemon ./backend/src/app.ts",
-    "test": "copy .env_test .env && tsc && jest --detectOpenHandles --forceExit",
+    "test": "copy .env_test .env && tsc && jest --detectOpenHandles --forceExit --coverage",
     "test:watch": "jest --watchAll=false",
+    "testServer": "copy .env_test .env && tsc && jest --detectOpenHandles --forceExit server.test.ts",
     "testAuth": "copy .env_test .env && tsc && jest --detectOpenHandles --forceExit auth.test.ts",
+    "testUser": "copy .env_test .env && tsc && jest --detectOpenHandles --forceExit user.test.ts",
     "testPost": "copy .env_test .env && tsc && jest --detectOpenHandles --forceExit posts.test.ts",
     "testComment": "copy .env_test .env && tsc && jest --detectOpenHandles --forceExit comments.test.ts",
     "testUpload": "copy .env_test .env && tsc && jest --detectOpenHandles --forceExit uploads.test.ts",

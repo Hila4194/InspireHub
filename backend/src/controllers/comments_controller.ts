@@ -48,7 +48,7 @@ class CommentsController extends BaseController<IComment> {
 
             const comment = await commentModel.findById(commentId);
             if (!comment) {
-                res.status(404).json({ message: "Comment not found." });
+                res.status(404).json({ message: "Comment not found" });
                 return;
             }
 
@@ -64,7 +64,7 @@ class CommentsController extends BaseController<IComment> {
             res.status(200).json(comment);
         } catch (error) {
             console.error("❌ Error updating comment:", error);
-            res.status(500).json({ message: "Failed to update comment." });
+            res.status(500).json({ message: "Failed to update comment" });
         }
     };
 
@@ -75,7 +75,7 @@ class CommentsController extends BaseController<IComment> {
 
             const comment = await commentModel.findById(commentId);
             if (!comment) {
-                res.status(404).json({ message: "Comment not found." });
+                res.status(404).json({ message: "Comment not found" });
                 return;
             }
 

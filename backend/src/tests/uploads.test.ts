@@ -1,3 +1,5 @@
+jest.setTimeout(10000); // 10 seconds timeout for this file
+
 import request from "supertest";
 import appPromise from "../server";
 import mongoose from "mongoose";
@@ -6,9 +8,24 @@ import fs from "fs";
 import { Express } from "express";
 
 let app: Express;
+let accessToken: string;
 
 beforeAll(async () => {
     app = await appPromise();
+
+    // Register a test user to get access token for uploads
+    await request(app).post("/api/auth/register").send({
+        username: "uploadTester1",
+        email: "upload@test.com",
+        password: "testpassword",
+    });
+
+    const res = await request(app).post("/api/auth/login").send({
+        username: "uploadTester1",
+        password: "testpassword",
+    });
+
+    accessToken = res.body.accessToken;
 });
 
 afterAll(async () => {
@@ -16,41 +33,47 @@ afterAll(async () => {
 });
 
 describe("Uploads Tests", () => {
+    const filePath = path.join(__dirname, "test_pic.png"); // Ensure this file exists
+
     test("Should upload a profile picture", async () => {
-        const filePath = path.join(__dirname, "test_pic.png"); // Ensure this file exists
+        const response = await request(app)
+            .post("/api/uploads/profile-picture")
+            .set({ Authorization: "Bearer " + accessToken })
+            .attach("file", filePath);
 
-        if (!fs.existsSync(filePath)) {
-            console.error("Test image file does not exist:", filePath);
-            return; // Skip test instead of failing
-        }
+        expect(response.statusCode).toEqual(200);
+        expect(response.body.url).toMatch(/\/uploads\/.+\.(png|jpg|jpeg)$/);
 
-        try {
-            const response = await request(app)
-                .post("/api/auth/register")
-                .set("Content-Type", "multipart/form-data")
-                .field("username", "testUser123")
-                .field("email", "test2@user.com")
-                .field("password", "testpassword")
-                .attach("profilePicture", filePath);
+        console.log("✅ Uploaded profile picture URL:", response.body.url);
+    });
 
-            if (response.statusCode !== 201) {
-                console.error("❌ Upload failed:", response.statusCode, response.body);
-            }
+    test("Should upload a post image", async () => {
+        const response = await request(app)
+            .post("/api/uploads/post-image")
+            .set({ Authorization: "Bearer " + accessToken })
+            .attach("file", filePath);
 
-            expect(response.statusCode).toEqual(201);
-            expect(response.body.user.profilePicture).toMatch(/\/uploads\/.+\.(png|jpg|jpeg)$/);
+        expect(response.statusCode).toEqual(200);
+        expect(response.body.url).toMatch(/\/uploads\/.+\.(png|jpg|jpeg)$/);
 
-            console.log("✅ Uploaded image URL:", response.body.user.profilePicture);
+        console.log("✅ Uploaded post image URL:", response.body.url);
+    });
 
-            const uploadedImageUrl = response.body.user.profilePicture;
-            const imageUrlPath = uploadedImageUrl.replace(/^.*\/\/[^/]+/, "");
+    test("Should return 400 if no file is uploaded (profile picture)", async () => {
+        const response = await request(app)
+            .post("/api/uploads/profile-picture")
+            .set({ Authorization: "Bearer " + accessToken });
 
-            // Ensure uploaded image is accessible
-            const res = await request(app).get(imageUrlPath);
-            expect(res.statusCode).toEqual(200);
-        } catch (err) {
-            console.error("❌ Upload test failed:", err);
-            throw err;
-        }
+        expect(response.statusCode).toEqual(400);
+        expect(response.body).toHaveProperty("message", "No file uploaded or invalid file type");
+    });
+
+    test("Should return 400 if no file is uploaded (post image)", async () => {
+        const response = await request(app)
+            .post("/api/uploads/post-image")
+            .set({ Authorization: "Bearer " + accessToken });
+
+        expect(response.statusCode).toEqual(400);
+        expect(response.body).toHaveProperty("message", "No file uploaded or invalid file type");
     });
 });

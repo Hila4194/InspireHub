@@ -12,6 +12,11 @@ const updateProfile = async (req: Request, res: Response): Promise<void> => {
             profilePicture = `/uploads/${req.file.filename}`;
         }
 
+        if (username && !/^(?=.*[a-zA-Z])(?=.*\d).+$/.test(username)) {
+            res.status(400).json({ message: "Username must contain both letters and numbers" });
+            return;
+        }
+
         const updateFields: { username?: string; profilePicture?: string } = {};
         if (username) updateFields.username = username;
         if (profilePicture) updateFields.profilePicture = profilePicture;

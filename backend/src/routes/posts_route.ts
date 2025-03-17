@@ -257,7 +257,6 @@ router.put("/:id", authMiddleware, upload.single("file"), postController.updateP
  */
 router.delete('/:id', authMiddleware, postController.deletePost.bind(postController));
 
-
 /**
  * @swagger
  * /api/posts/{postId}/like:
