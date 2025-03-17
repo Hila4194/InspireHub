@@ -3,6 +3,7 @@ import multer from "multer";
 import path from "path";
 import fs from "fs";
 import { authMiddleware } from "../controllers/auth_controller";
+import { uploadProfilePicture, uploadPostImage } from "../controllers/upload_controller";
 
 const router = express.Router();
 
@@ -41,7 +42,7 @@ const upload = multer({
  * @swagger
  * /api/uploads/profile-picture:
  *   post:
- *     summary: Uploads a new profile picture (authenticated users only)
+ *     summary: Uploads a new profile picture
  *     security:
  *       - bearerAuth: []
  *     tags: 
@@ -64,36 +65,35 @@ const upload = multer({
  *       500:
  *         description: Internal server error
  */
-router.post("/profile-picture", authMiddleware, upload.single("file"), async (req, res): Promise<void> => {
-    try {
-        if (!req.file) {
-            res.status(400).json({ message: "No file uploaded or invalid file type" });
-            return;
-        }
+router.post("/profile-picture", authMiddleware, upload.single("file"), uploadProfilePicture);
 
-        const imageUrl = `/uploads/${req.file.filename}`;
-
-        console.log("✅ Profile picture uploaded:", imageUrl);
-
-        res.json({ url: imageUrl });
-    } catch (error) {
-        res.status(500).json({ message: "Internal server error" });
-    }
-});
-
-router.post("/post-image", authMiddleware, upload.single("file"), async (req, res): Promise<void> => {
-    try {
-        if (!req.file) {
-            res.status(400).json({ message: "No file uploaded or invalid file type" });
-            return;
-        }
-        const imageUrl = `/uploads/${req.file.filename}`;
-        console.log("✅ Post image uploaded:", imageUrl);
-        res.json({ url: imageUrl });
-    } catch (error) {
-        console.error("❌ Error handling post image upload:", error);
-        res.status(500).json({ message: "Internal server error" });
-    }
-});
+/**
+ * @swagger
+ * /api/uploads/post-image:
+ *   post:
+ *     summary: Uploads a new post image
+ *     security:
+ *       - bearerAuth: []
+ *     tags: 
+ *       - Uploads
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         multipart/form-data:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               file:
+ *                 type: string
+ *                 format: binary
+ *     responses:
+ *       200:
+ *         description: Post image uploaded successfully
+ *       400:
+ *         description: No file uploaded or invalid file type
+ *       500:
+ *         description: Internal server error
+ */
+router.post("/post-image", authMiddleware, upload.single("file"), uploadPostImage);
 
 export { upload, router };
