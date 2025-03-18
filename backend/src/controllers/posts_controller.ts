@@ -8,13 +8,16 @@ import { GoogleGenerativeAI } from "@google/generative-ai";
 import dotenv from "dotenv";
 dotenv.config();
 
+// Initialize Google Generative AI API
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY!);
 
+// This controller handles CRUD operations for posts
 class PostsController extends BaseController<IPost> {
     constructor() {
         super(postModel);
     }
 
+    // Create a new post
     async createPost(req: AuthenticatedRequest, res: Response): Promise<void> {
         try {
             if (!req.user || !req.user.id) {
@@ -25,7 +28,8 @@ class PostsController extends BaseController<IPost> {
             const senderId = req.user.id;
             const { title, content } = req.body;
             const imageUrl = req.file ? `/uploads/${req.file.filename}` : req.body.imageUrl || "";
-    
+            
+            // Ensure at least a title and either content or image is provided
             if (!title || (!content && !imageUrl)) {
                 res.status(400).json({ message: "Title and either content or an image are required." });
                 return;
@@ -46,6 +50,7 @@ class PostsController extends BaseController<IPost> {
         }
     }    
 
+    // Retrieves all posts with pagination and user profile pictures
     async getPosts(req: Request, res: Response) {
         try {
             const userId = (req as AuthenticatedRequest).user?.id;
@@ -94,10 +99,12 @@ class PostsController extends BaseController<IPost> {
         }
     }    
 
+    // Retrieves a single post by ID
     async getPostById (req: Request, res: Response): Promise<void> {
         super.getById(req, res);
     };
 
+    // Retrieves posts by a specific sender (user)
     async getPostsBySender(req: Request, res: Response): Promise<void> {
         try {
             const userId = req.params.userId || req.query.sender;
@@ -127,6 +134,7 @@ class PostsController extends BaseController<IPost> {
         }
     }    
 
+    // Updates a post by ID
     async updatePost(req: Request, res: Response): Promise<void> {
         try {
             console.log("📌 Incoming Update Request:", req.body);
@@ -145,6 +153,7 @@ class PostsController extends BaseController<IPost> {
         }
     }    
 
+    // Deletes a post by ID and its associated comments
     async deletePost(req: Request, res: Response): Promise<void> {
         const { id } = req.params;
 
@@ -165,7 +174,7 @@ class PostsController extends BaseController<IPost> {
         }
     };
 
-    // Toggle Like/Unlike
+    // Toggle Like/Unlike on a post
     async toggleLikePost(req: AuthenticatedRequest, res: Response): Promise<void> {
         try {
             const { postId } = req.params;
@@ -201,6 +210,7 @@ class PostsController extends BaseController<IPost> {
         }
     }    
 
+    // Generates AI-based post suggestions using Google's Gemini AI
     async getPostSuggestions(req: Request, res: Response): Promise<void> {
         console.log("🔹 Function `getPostSuggestions` was called!");
     

@@ -1,7 +1,7 @@
 import { Request, Response } from "express";
 import userModel from "../models/user_model";
 
-// Update Profile Function
+// Updates a user's profile, including their username and profile picture
 const updateProfile = async (req: Request, res: Response): Promise<void> => {
     try {
         const userId = req.params.id;

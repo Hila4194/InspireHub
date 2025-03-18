@@ -8,6 +8,7 @@ const isValidImage = (filename: string): boolean => {
     return allowedExtensions.includes(fileExtension);
 };
 
+// Handles uploading a profile picture
 export const uploadProfilePicture = async (req: Request, res: Response): Promise<void> => {
     try {
         if (!req.file) {
@@ -15,12 +16,14 @@ export const uploadProfilePicture = async (req: Request, res: Response): Promise
             return;
         }
 
+        // Validate the uploaded file type
         if (!isValidImage(req.file.filename)) {
             console.error("❌ Invalid file type:", req.file.filename);
             res.status(400).json({ message: "Only .png, .jpg, and .jpeg formats are allowed!" });
             return;
         }
 
+        // Construct the image URL
         const imageUrl = `/uploads/${req.file.filename}`;
         console.log("✅ Profile picture uploaded:", imageUrl);
         res.json({ url: imageUrl });
@@ -31,6 +34,7 @@ export const uploadProfilePicture = async (req: Request, res: Response): Promise
     }
 };
 
+// Handles uploading a post image
 export const uploadPostImage = async (req: Request, res: Response): Promise<void> => {
     try {
         if (!req.file) {

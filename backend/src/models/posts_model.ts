@@ -1,5 +1,6 @@
 import mongoose from 'mongoose';
 
+// Interface representing a Post document in MongoDB
 export interface IPost {
     title: string;
     content?: string;
@@ -9,6 +10,7 @@ export interface IPost {
     comments: mongoose.Types.ObjectId[];
 }
 
+// Mongoose schema defining the structure of a Post document
 const PostSchema = new mongoose.Schema<IPost>({
     title: { type: String, required: true }, 
     content: { type: String, required: function() { return !this.imageUrl; } },

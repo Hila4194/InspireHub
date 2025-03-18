@@ -4,11 +4,13 @@ import BaseController from './base_controller';
 import { AuthenticatedRequest } from '../../types';
 import postModel from '../models/posts_model';
 
+// This controller handles CRUD operations for comments on posts
 class CommentsController extends BaseController<IComment> {
     constructor() {
         super(commentModel);
     }
 
+    // Create a new comment
     async createComment(req: AuthenticatedRequest, res: Response) {
         try {
             if (!req.user || !req.user.id) {
@@ -36,10 +38,12 @@ class CommentsController extends BaseController<IComment> {
         }
     };
 
+    // Retrieves a single comment by its ID
     async getCommentById (req: Request, res: Response): Promise<void> {
         super.getById(req, res);
     };
 
+    // Updates a comment by its ID
     async updateComment(req: AuthenticatedRequest, res: Response): Promise<void> {
         try {
             const { content } = req.body;
@@ -68,6 +72,7 @@ class CommentsController extends BaseController<IComment> {
         }
     };
 
+    // Deletes a comment by its ID
     async deleteComment(req: AuthenticatedRequest, res: Response): Promise<void> {
         try {
             const commentId = req.params.id;
@@ -97,6 +102,7 @@ class CommentsController extends BaseController<IComment> {
         }
     };
 
+    // Retrieves all comments for a specific post
     async getCommentsByPost(req: Request, res: Response): Promise<void> {
         try {
             const postId = req.params.postId;

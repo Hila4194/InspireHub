@@ -1,6 +1,7 @@
 import { Request, Response } from 'express';
 import { Model } from "mongoose";
 
+// This is a generic base controller class for CRUD operations
 class BaseController<T> {
     model: Model<T>;
     constructor(model: Model<T>) {
@@ -8,6 +9,7 @@ class BaseController<T> {
         this.model = model;
     }
 
+    // Create a new item
     async create(req: Request, res: Response) {
         const body = req.body;
         console.log(body);
@@ -21,6 +23,7 @@ class BaseController<T> {
         }
     };
 
+    // Get all items
     async getAll(req: Request, res: Response, filterKey?: string) {
         try {
             let query = {}; 
@@ -42,6 +45,7 @@ class BaseController<T> {
         }
     }    
 
+    // Get item by ID
     async getById (req: Request, res: Response): Promise<void> {
         const id = req.params.id;
         try {
@@ -56,6 +60,7 @@ class BaseController<T> {
         }
     };
     
+    // Update item by ID
     async update(req: Request, res: Response): Promise<void> {
         try {
             console.log("📌 Updating Post with ID:", req.params.id);
@@ -85,6 +90,7 @@ class BaseController<T> {
         }
     }    
 
+    // Delete item by ID
     async delete (req: Request, res: Response): Promise<void> {
         try {
             const item = await this.model.findById(req.params.id);

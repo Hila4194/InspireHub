@@ -16,11 +16,10 @@ const testUser: User = {
 };
 
 beforeAll(async () => {
-    console.log("📌 Setting up test environment...");
     app = await appPromise();
     await userModel.deleteMany(); // Ensure clean state
 
-    // ✅ Register a new test user
+    // Register a new test user
     await request(app).post("/api/auth/register").send(testUser);
     const res = await request(app).post("/api/auth/login").send({
         username: testUser.username,
@@ -30,8 +29,6 @@ beforeAll(async () => {
     testUser.accessToken = res.body.accessToken;
     testUser._id = res.body._id;
     userId = res.body._id;
-
-    console.log("✅ Test user created:", testUser);
 });
 
 afterAll(async () => {
@@ -78,7 +75,7 @@ describe("User Tests", () => {
             .set({ authorization: "Bearer " + testUser.accessToken })
             .send({ username: "NonExistentUser" });
     
-        expect(res.statusCode).toEqual(400); // ✅ Match the actual response
+        expect(res.statusCode).toEqual(400);
         expect(res.body).toHaveProperty("message", "Username must contain both letters and numbers");
     });    
 

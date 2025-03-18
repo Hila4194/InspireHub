@@ -43,8 +43,6 @@ describe("Uploads Tests", () => {
 
         expect(response.statusCode).toEqual(200);
         expect(response.body.url).toMatch(/\/uploads\/.+\.(png|jpg|jpeg)$/);
-
-        console.log("✅ Uploaded profile picture URL:", response.body.url);
     });
 
     test("Should upload a post image", async () => {
@@ -55,8 +53,6 @@ describe("Uploads Tests", () => {
 
         expect(response.statusCode).toEqual(200);
         expect(response.body.url).toMatch(/\/uploads\/.+\.(png|jpg|jpeg)$/);
-
-        console.log("✅ Uploaded post image URL:", response.body.url);
     });
 
     test("Should return 400 if no file is uploaded (profile picture)", async () => {

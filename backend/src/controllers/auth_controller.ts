@@ -2,7 +2,6 @@ import { Request, Response, NextFunction } from "express";
 import userModel, { IUser } from "../models/user_model";
 import bcrypt from "bcrypt";
 import jwt, { SignOptions } from "jsonwebtoken";
-import path from "path";
 import { OAuth2Client } from "google-auth-library";
 import { AuthenticatedRequest } from "../../types";
 
@@ -10,11 +9,13 @@ type Payload = {
   _id: string;
 };
 
+// Registers a new user with a username, email, and password
 const register = async (req: Request, res: Response): Promise<void> => {
   try {
     const { username, email, password } = req.body;
     const profilePicture = req.file ? `/uploads/${req.file.filename}` : "/uploads/default-avatar.png";
-
+    
+    // Validate required fields
     if (!username || !email || !password) {
       res
         .status(400)
@@ -22,6 +23,7 @@ const register = async (req: Request, res: Response): Promise<void> => {
       return;
     }
 
+    // Enforce username rules: Must contain both letters and numbers
     if (!/^(?=.*[a-zA-Z])(?=.*\d).+$/.test(username)) {
       res
         .status(400)
@@ -29,12 +31,14 @@ const register = async (req: Request, res: Response): Promise<void> => {
       return;
     }
 
+    // Check if email is already registered
     const existingUser = await userModel.findOne({ email });
     if (existingUser) {
       res.status(400).json({ message: "Email already in use" });
       return;
     }
 
+    // Hash password before storing
     const hashedPassword = await bcrypt.hash(password, 10);
     const newUser: IUser = await userModel.create({
       username,
@@ -53,6 +57,7 @@ const register = async (req: Request, res: Response): Promise<void> => {
   }
 };
 
+// Generates access and refresh tokens for authentication
 const generateTokens = (
   _id: string
 ): { accessToken: string; refreshToken: string } | null => {
@@ -81,6 +86,7 @@ const generateTokens = (
   return { accessToken, refreshToken };
 };
 
+// Logs in a user with a username and password
 const login = async (req: Request, res: Response): Promise<void> => {
   const { username, password } = req.body;
 
@@ -144,6 +150,7 @@ const login = async (req: Request, res: Response): Promise<void> => {
   }
 };
 
+// Refreshes the access token using a refresh token
 const refresh = async (req: Request, res: Response) => {
   const { refreshToken } = req.body;
   console.log("refreshToken:", refreshToken);
@@ -163,7 +170,7 @@ const refresh = async (req: Request, res: Response) => {
         res.status(403).send("Invalid token");
         return;
       }
-      //  find the user by refresh token
+      // find the user by refresh token
       const userId = (payload as Payload)._id;
       try {
         const user = await userModel.findById(userId);
@@ -211,6 +218,7 @@ const refresh = async (req: Request, res: Response) => {
   );
 };
 
+// Logs out a user by removing the refresh token from their list of tokens
 const logout = async (req: Request, res: Response) => {
   const { refreshToken } = req.body;
   if (!refreshToken) {
@@ -257,6 +265,7 @@ const logout = async (req: Request, res: Response) => {
   );
 };
 
+// Middleware to authenticate requests using JWT
 export const authMiddleware = (req: AuthenticatedRequest,res: Response,next: NextFunction): void => {
   const authHeader = req.headers.authorization;
   const token = authHeader && authHeader.split(" ")[1];
@@ -282,7 +291,9 @@ export const authMiddleware = (req: AuthenticatedRequest,res: Response,next: Nex
   });
 };
 
+
 const client = new OAuth2Client();
+// Handles Google OAuth login and user creation
 export const googleSignin = async (req: Request,res: Response): Promise<void> => {
   try {
     const ticket = await client.verifyIdToken({
@@ -304,7 +315,7 @@ export const googleSignin = async (req: Request,res: Response): Promise<void> =>
 
     let user = await userModel.findOne({ email });
     if (!user) {
-      // ✅ Generate a valid username (letters + digits)
+      // Generate a valid username (letters + digits)
       const safeName = (payload.name || "User").replace(/\s+/g, "");
       const randomDigits = Math.floor(Math.random() * 1000);
       const username = safeName + randomDigits;

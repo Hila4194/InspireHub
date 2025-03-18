@@ -1,5 +1,6 @@
 import mongoose from "mongoose";
 
+// Interface representing a User document in MongoDB
 export interface IUser {
   username: string;
   email: string;
@@ -9,6 +10,7 @@ export interface IUser {
   refreshTokens?: string[];
 }
 
+// Mongoose schema defining the structure of a User document
 const userSchema = new mongoose.Schema<IUser>({
   username: {
     type: String,
