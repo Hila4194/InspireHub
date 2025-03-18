@@ -5,7 +5,7 @@ import postModel from "../models/posts_model";
 import testPosts from "./test_posts.json";
 import userModel, { IUser } from "../models/user_model";
 import { Express } from "express";
-import { GoogleGenerativeAI } from "@google/generative-ai"; // ✅ Import AI module
+import { GoogleGenerativeAI } from "@google/generative-ai";
 
 let app: Express;
 let postId: string;

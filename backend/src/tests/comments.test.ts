@@ -180,25 +180,17 @@ describe("Get Comments by Post ID", () => {
         .get(`/api/comments/post/${postId}`)
         .set({ authorization: "JWT " + testUser.accessToken });
 
-    console.log("📌 Test Response:", JSON.stringify(res.body, null, 2)); // ✅ Debugging output
-
     expect(res.statusCode).toEqual(200);
     expect(res.body).toBeInstanceOf(Array);
     expect(res.body.length).toBeGreaterThan(0);
     expect(res.body[0]).toHaveProperty("_id");
-    console.log("📌 Expected:", testComments[0].content);
-    console.log("📌 Received:", res.body[0].content);
-    
     expect([testComments[0].content, "Updated content"]).toEqual(
         expect.arrayContaining([res.body[0].content])
-    ); // ✅ Ensures test passes even if comment was updated
+    ); // Ensures test passes even if comment was updated
     
-    // ✅ Debugging output before the test assertion
-    console.log("📌 Sender Data:", res.body[0].sender);
-
-    // ✅ Check if sender is populated
-    expect(res.body[0].sender).not.toBeNull(); // ✅ Ensure sender exists
-    expect(res.body[0].sender).toHaveProperty("_id"); // ✅ Ensure sender._id is present
+    // Check if sender is populated
+    expect(res.body[0].sender).not.toBeNull(); // Ensure sender exists
+    expect(res.body[0].sender).toHaveProperty("_id"); // Ensure sender._id is present
     expect(res.body[0].sender._id).toEqual(testUser._id);
 
     expect(res.body[0].postId).toEqual(postId);
@@ -207,18 +199,16 @@ describe("Get Comments by Post ID", () => {
 test("should return 500 if there is a server error", async () => {
   jest.spyOn(commentModel, "find").mockImplementationOnce(() => {
       return {
-          exec: jest.fn().mockRejectedValue(new Error("Database error")), // ✅ Proper async error mocking
+          exec: jest.fn().mockRejectedValue(new Error("Database error")),
       } as any;
   });
 
   const res = await request(app)
       .get(`/api/comments/post/${postId}`)
-      .set({ authorization: "JWT " + testUser.accessToken }); // ✅ Add Authorization header
-
-  console.log("📌 Test Response:", res.body); // ✅ Debugging output
+      .set({ authorization: "JWT " + testUser.accessToken }); // Add Authorization header
 
   expect(res.statusCode).toEqual(500);
-  expect(res.body).toHaveProperty("message", "Error fetching comments"); // ✅ Match actual API response
+  expect(res.body).toHaveProperty("message", "Error fetching comments");
 
   jest.restoreAllMocks();
 });
@@ -255,23 +245,21 @@ describe("Delete Comment", () => {
   
   describe("Get Comments by Post ID", () => {
     test("should return empty comments after deletion", async () => {
-      // ✅ Delete the first test comment
+      // Delete the first test comment
       await request(app)
-          .delete(`/api/comments/${commentId}`) // ✅ Access the first comment in the array
+          .delete(`/api/comments/${commentId}`) // Access the first comment in the array
           .set({ authorization: "JWT " + testUser.accessToken });
   
-      // ✅ Ensure deletion completes before fetching comments
+      // Ensure deletion completes before fetching comments
       await new Promise(resolve => setTimeout(resolve, 100));
   
-      // ✅ Fetch comments to check if they are empty
+      // Fetch comments to check if they are empty
       const res = await request(app)
           .get(`/api/comments/post/${postId}`)
           .set({ authorization: "JWT " + testUser.accessToken });
-  
-      console.log("📌 Test Response (After Deletion):", res.body); // ✅ Debugging output
-  
+    
       expect(res.statusCode).toEqual(200);
       expect(res.body).toBeInstanceOf(Array);
-      expect(res.body.length).toEqual(0); // ✅ Ensures comments are empty
+      expect(res.body.length).toEqual(0); // Ensures comments are empty
   });  
   });

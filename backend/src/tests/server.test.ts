@@ -28,7 +28,7 @@ describe("Server Initialization", () => {
         const originalEnv = { ...process.env };
         delete process.env.DATABASE_URL; // Remove DATABASE_URL
 
-        await expect(appPromise()).rejects.toThrow("DATABASE_URL is not set"); // ✅ Now matches `server.ts`
+        await expect(appPromise()).rejects.toThrow("DATABASE_URL is not set");
 
         process.env = originalEnv; // Restore original environment variables
     });
