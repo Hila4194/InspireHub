@@ -326,6 +326,7 @@ export const googleSignin = async (req: Request,res: Response): Promise<void> =>
     res.status(200).json({
       email: user.email,
       _id: user._id,
+      username: user.username,
       profilePicture: user.profilePicture,
       ...tokens,
     });
