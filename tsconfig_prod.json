@@ -1,6 +1,5 @@
 {
   "compilerOptions": {
-  //"types": ["jest"],
   "module": "commonjs",
   "esModuleInterop": true,
   "target": "es6",
@@ -10,5 +9,6 @@
   "strict": true,
   "resolveJsonModule": true
   },
-  "lib": ["es2015"]
+  "lib": ["es2015"],
+  "exclude": ["./backend/src/tests"]
 }

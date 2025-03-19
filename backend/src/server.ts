@@ -19,7 +19,7 @@ app.use(express.urlencoded({ extended: true }));
 
 // CORS Configuration
 app.use(cors({
-    origin: "http://localhost:5173", // Allow frontend access
+    origin: "*", // Allow frontend access
     methods: "GET, POST, PUT, DELETE, OPTIONS",
     allowedHeaders: "Content-Type, Authorization",
     credentials: true
@@ -63,7 +63,7 @@ app.get("/api/quote", async (req: Request, res: Response): Promise<void> => {
 
 // Ensure Preflight Requests Are Handled
 app.options("*", (req, res) => {
-  res.header("Access-Control-Allow-Origin", "http://localhost:5173");
+  res.header("Access-Control-Allow-Origin", "*");
   res.header("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS");
   res.header("Access-Control-Allow-Headers", "Content-Type, Authorization");
   res.header("Access-Control-Allow-Credentials", "true");
@@ -81,7 +81,13 @@ const options = {
         },
         servers: [
             {
-                url: `http://localhost:${process.env.PORT}`,
+                url: `http://localhost:4040`,
+            },
+            {
+                url: `http://10.10.246.42`,
+            },
+            {
+                url: `https://10.10.246.42`,
             },
         ],
     },
@@ -89,7 +95,7 @@ const options = {
 };
 
 const specs = swaggerJsdoc(options);
-console.log(`Swagger docs available at http://localhost:${process.env.PORT}/api-docs`);
+console.log(`Swagger docs available!`);
 
 // Import Routes
 import postRouter from './routes/posts_route';
@@ -110,15 +116,17 @@ const initApp = async (): Promise<Express> => {
         console.log('Connected to Database');
 
         // Static file serving
-        app.use("/public/", express.static("backend/public"));
         app.use('/uploads', express.static(path.join(__dirname, "../uploads")));
+
+        // Serve the React frontend
+        app.use(express.static(path.join(__dirname, "../../../front")));
 
         // Use Routes
         app.use('/api/posts', postRouter);
         app.use('/api/comments', commentRouter);
         app.use('/api/auth', authRouter);
         app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(specs));
-        app.use("/api/uploads", uploadRouter);
+        app.use('/api/uploads', uploadRouter);
 
         return app;
     } catch (error) {
