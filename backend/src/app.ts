@@ -1,15 +1,30 @@
 import initApp from './server';
+import https from "https";
+import fs from "fs";
 
 const startServer = async () => {
   try {
     const app = await initApp();
-    const PORT = process.env.PORT || 4040;
-    app.listen(PORT, () => {
+    const PORT = process.env.PORT;
+    if(process.env.NODE_ENV != "production")
+    {
+      app.listen(PORT, () => {
+        console.log(`Server is running on port ${PORT}`);
+      });
+    } 
+    else
+    {
+      const prop = {
+        key: fs.readFileSync("../client-key.pem"),
+        cert: fs.readFileSync("../client-cert.pem")
+      }
+      https.createServer(prop, app).listen(PORT);
       console.log(`Server is running on port ${PORT}`);
-    });
-  } catch (error) {
-    console.error('Failed to start the server:', error);
-  }
+    }
+    }
+    catch (error) {
+      console.error('Failed to start the server:', error);
+    }
 };
 
 startServer();

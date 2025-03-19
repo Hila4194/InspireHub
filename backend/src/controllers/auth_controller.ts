@@ -132,8 +132,6 @@ const login = async (req: Request, res: Response): Promise<void> => {
       }
     }
 
-    console.log("✅ Debug: Sending Profile Picture URL:", profilePictureUrl);
-
     res.status(200).json({
       username: user.username,
       email: user.email,

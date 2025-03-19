@@ -89,9 +89,7 @@ class PostsController extends BaseController<IPost> {
                     }
                 };
             });
-    
-            console.log("✅ Debug: Sending Posts with User Profile Pictures", formattedPosts);
-    
+        
             res.json(formattedPosts);
         } catch (error) {
             console.error("❌ Error fetching posts:", error);
