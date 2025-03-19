@@ -66,7 +66,9 @@ class PostsController extends BaseController<IPost> {
                 })
                 .sort({ createdAt: -1 }) // Ensure newest posts appear first
                 .skip(skip)
-                .limit(limit); // Pagination applied here
+                .limit(limit) // Pagination applied here
+                .select("title content imageUrl sender likes comments createdAt"); // ✅ Explicitly select createdAt
+
     
             const apiBaseUrl = process.env.DOMAIN_BASE?.trim().replace(/\/$/, "");
     
@@ -78,6 +80,7 @@ class PostsController extends BaseController<IPost> {
                     ...post.toObject(),
                     likes: post.likes.length, // Convert likes array into number
                     likedByUser: userId ? post.likes.some((like: any) => like._id.toString() === userId) : false,
+                    createdAt: post.createdAt,
                     imageUrl: post.imageUrl?.startsWith("/uploads/") 
                         ? `${apiBaseUrl}${post.imageUrl}`
                         : post.imageUrl,
