@@ -120,7 +120,8 @@ const initApp = async (): Promise<Express> => {
 
         // Serve the React frontend
         app.use(express.static(path.join(__dirname, "../../../front")));
-
+        app.get('/', (req, res) => {res.send('Server is running');});
+        
         // Use Routes
         app.use('/api/posts', postRouter);
         app.use('/api/comments', commentRouter);
